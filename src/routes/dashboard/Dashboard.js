@@ -4,7 +4,7 @@ import './Dashboard.sass';
 const Dashboard = () => {
     return (
         <div className='Dashboard'>
-            Dashboard component works!!!
+            Dashboard component works!!! With new changes
         </div>
     );
 };

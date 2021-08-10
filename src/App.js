@@ -1,5 +1,5 @@
 import './App.sass';
-import { BrowserRouter, Route, Switch, Redirect } from 'react-router-dom';
+import { HashRouter, Route, Switch, Redirect } from 'react-router-dom';
 import Login from './routes/login/Login';
 import Dashboard from './routes/dashboard/Dashboard';
 import NotFound from './routes/NotFound/NotFound';
@@ -7,7 +7,7 @@ import NotFound from './routes/NotFound/NotFound';
 function App() {
   return (
     <div className="App">
-      <BrowserRouter>
+      <HashRouter>
         <Switch>
           <Route
             path='/'
@@ -25,7 +25,7 @@ function App() {
             component={NotFound}
           />
         </Switch>
-      </BrowserRouter>
+      </HashRouter>
     </div>
   );
 }
