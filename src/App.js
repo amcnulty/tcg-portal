@@ -3,6 +3,7 @@ import { HashRouter, Route, Switch, Redirect } from 'react-router-dom';
 import Login from './routes/login/Login';
 import Dashboard from './routes/dashboard/Dashboard';
 import NotFound from './routes/NotFound/NotFound';
+import PrivateRoute from './components/privateRoute/PrivateRoute';
 
 function App() {
   return (
@@ -14,11 +15,12 @@ function App() {
             exact
             component={Login}
           />
-          <Route
+          <PrivateRoute
             path='/dashboard'
             exact
-            component={Dashboard}
-          />
+          >
+            <Dashboard/>
+          </PrivateRoute>
           <Route
             path='*'
             exact
