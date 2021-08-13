@@ -4,6 +4,7 @@ import Login from './routes/login/Login';
 import Dashboard from './routes/dashboard/Dashboard';
 import NotFound from './routes/NotFound/NotFound';
 import PrivateRoute from './components/privateRoute/PrivateRoute';
+import Settings from './routes/settings/Settings';
 
 function App() {
   return (
@@ -20,6 +21,12 @@ function App() {
             exact
           >
             <Dashboard/>
+          </PrivateRoute>
+          <PrivateRoute
+            path='/settings'
+            exact
+          >
+            <Settings/>
           </PrivateRoute>
           <Route
             path='*'

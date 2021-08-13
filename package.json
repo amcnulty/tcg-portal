@@ -20,7 +20,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "postbuild": "ncp build docs",
+    "postbuild": "rmdir /s /q docs && ncp build docs",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
