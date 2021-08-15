@@ -17,7 +17,7 @@ const PrivateRoute = ({ children, ...rest }) => {
                 }}/>);
             }
         });
-    }, []);
+    }, [rest]);
 
     return (
         <Route {...rest} render={() => {

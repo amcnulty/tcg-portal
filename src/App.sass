@@ -4,7 +4,12 @@ html
     scroll-behavior: auto !important
     body
         background-color: $backgroundColor
-        padding-top: $headerHeight
+        height: 100vh
+        overflow: hidden
+
+        .mainContent
+            height: 100vh
+            overflow-y: auto
 
     .themeText
         color: $contractorsGarageOrange
@@ -17,3 +22,10 @@ html
 
     .gunMetalBackground
         background-color: $gunMetalGrey
+
+    .lightTheme
+        .Toolbar
+            background-color: lighten($gunMetalGrey, 20)
+            color: white
+
+    .darkTheme
