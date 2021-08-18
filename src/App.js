@@ -8,61 +8,71 @@ import Settings from './routes/settings/Settings';
 import Locations from './routes/locations/Locations';
 import Toolbar from './shared/toolbar/Toolbar';
 import MobileHeader from './shared/mobileHeader/MobileHeader';
+import Store from './context/Store';
+import Users from './routes/users/Users';
 
 function App() {
   return (
-    <div className="App lightTheme">
-      <HashRouter>
-        <div className="row m-0">
-          <Route
-            path='/'
-            render={props => (
-              props.location.pathname !== '/' &&
-              <>
-                <div className="d-none d-md-block col-2 p-0">
-                  <Toolbar/>
-                </div>
-                <div className='d-md-none'>
-                  <MobileHeader/>
-                </div>
-              </>
-            )}
-          />
-          <div className="col-10 mainContent">
-              <Switch>
-                <Route
-                  path='/'
-                  exact
-                  component={Login}
-                />
-                <PrivateRoute
-                  path='/dashboard'
-                  exact
-                >
-                  <Dashboard/>
-                </PrivateRoute>
-                <PrivateRoute
-                  path='/locations'
-                  exact
-                >
-                  <Locations/>
-                </PrivateRoute>
-                <PrivateRoute
-                  path='/settings'
-                  exact
-                >
-                  <Settings/>
-                </PrivateRoute>
-                <Route
-                  path='*'
-                  exact
-                  component={NotFound}
-                />
-              </Switch>
+    <Store>
+      <div className="App lightTheme">
+        <HashRouter>
+          <div className="row m-0">
+            <Route
+              path='/'
+              render={props => (
+                props.location.pathname !== '/' &&
+                <>
+                  <div className="d-none d-md-block col-2 p-0">
+                    <Toolbar/>
+                  </div>
+                  <div className='d-md-none'>
+                    <MobileHeader/>
+                  </div>
+                </>
+              )}
+            />
+            <div className="col-md-10 mainContent">
+                <Switch>
+                  <Route
+                    path='/'
+                    exact
+                    component={Login}
+                  />
+                  <PrivateRoute
+                    path='/dashboard'
+                    exact
+                  >
+                    <Dashboard/>
+                  </PrivateRoute>
+                  <PrivateRoute
+                    path='/locations'
+                    exact
+                  >
+                    <Locations/>
+                  </PrivateRoute>
+                  <PrivateRoute
+                    path='/users'
+                    exact
+                  >
+                    <Users/>
+                  </PrivateRoute>
+                  <PrivateRoute
+                    path='/settings'
+                    exact
+                  >
+                    <Settings/>
+                  </PrivateRoute>
+                  <Route
+                    path='*'
+                    exact
+                    component={NotFound}
+                  />
+                </Switch>
+            </div>
           </div>
-        </div>
-      </HashRouter>
-    </div>
+        </HashRouter>
+      </div>
+    </Store>
   );
 }
 

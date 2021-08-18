@@ -4,6 +4,13 @@ const baseUrl = (process.env.NODE_ENV === 'production') ? 'https://contractorsga
 const config = { withCredentials: true };
 
 export const API = {
+    /*
+    *          !!##########################!!
+    *          !!                          !!
+    *          !!          Users           !!
+    *          !!                          !!
+    *          !!##########################!!
+    */
     /**
      * Checks if a user is currently logged in with a session.
      * @param {Function} cb Callback function that returns response or error of the server request.
@@ -32,5 +39,21 @@ export const API = {
     logOut: (cb) => {
         axios.post(baseUrl + '/api/user/logout', null, config)
         .then(cb, err => cb(null, err));
-    }
+    },
+    
+    getAllUsers: (cb) => {
+        axios.get(baseUrl + '/portal/user/get-all-users', config)
+        .then(cb, err => cb(null, err));
+    },
+    /*
+    *          !!##########################!!
+    *          !!                          !!
+    *          !!        Locations         !!
+    *          !!                          !!
+    *          !!##########################!!
+    */
+   getLocations: (cb) => {
+       axios.get(baseUrl + '/portal/locations', config)
+       .then(cb, err => cb(null, err));
+   }
 }

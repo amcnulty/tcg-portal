@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { Redirect, useLocation } from 'react-router-dom';
+import { SET_USER } from '../../context/ActionTypes';
+import { AppContext } from '../../context/Store';
 import { API } from '../../util/API';
 import './Login.sass';
 
@@ -10,17 +12,19 @@ const Login = () => {
   ] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [state, dispatch] = useContext(AppContext);
 
-  const { state } = useLocation();
+  const { state: locationState } = useLocation();
 
   if (redirectToReferrer === true) {
-    return <Redirect to={state?.from || '/dashboard'} />
+    return <Redirect to={locationState?.from || '/dashboard'} />
   }
 
   const handleLogin = (event) => {
     event.preventDefault();
     API.logIn({ username, password }, (res, err) => {
       if (res && res.status === 200) {
+        dispatch({type: SET_USER, payload: res.data});
         setRedirectToReferrer(true);
       }
       else {
