@@ -10,6 +10,7 @@ import Toolbar from './shared/toolbar/Toolbar';
 import MobileHeader from './shared/mobileHeader/MobileHeader';
 import Store from './context/Store';
 import Users from './routes/users/Users';
+import LocationEdit from './routes/locations/locationEdit/LocationEdit';
 
 function App() {
   return (
@@ -49,6 +50,12 @@ function App() {
                     exact
                   >
                     <Locations/>
+                  </PrivateRoute>
+                  <PrivateRoute
+                    path='/location/:slug'
+                    
+                  >
+                    <LocationEdit/>
                   </PrivateRoute>
                   <PrivateRoute
                     path='/users'

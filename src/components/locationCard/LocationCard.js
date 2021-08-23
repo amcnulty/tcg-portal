@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import './LocationCard.sass';
 import defaultImage from './default.png';
 import { Dropdown, DropdownItem, DropdownMenu, DropdownToggle } from 'reactstrap';
+import { Link } from 'react-router-dom';
 
 const LocationCard = ({location}) => {
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -39,7 +40,7 @@ const LocationCard = ({location}) => {
                         </div>
                     </div>
                     <div className="card-footer cardFooterBackground d-flex justify-content-between">
-                        <button className="btn btn-primary">Manage</button>
+                        <Link className='btn btn-primary' to={`/location/${location.slug}`}>Manage</Link>
                         <Dropdown isOpen={dropdownOpen} toggle={toggle}>
                             <DropdownToggle tag='span'>
                                 <button className="btn">

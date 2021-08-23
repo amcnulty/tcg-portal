@@ -1,8 +1,10 @@
 import { createContext, useReducer } from 'react';
+import { TAB_GENERAL } from '../shared/Constants';
 import Reducer from './Reducer';
 
 const initialState = {
-    currentUser: null
+    currentUser: null,
+    tabView: TAB_GENERAL
 }
 
 const Store = (props) => {
