@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Link, useHistory } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { AppContext } from '../../context/Store';
 import { API } from '../../util/API';
 import './Dashboard.sass';
@@ -7,7 +7,6 @@ import './Dashboard.sass';
 const Dashboard = () => {
     const [locations, setLocations] = useState([]);
     const [users, setUsers] = useState([]);
-    const history = useHistory();
     const [state, dispatch] = useContext(AppContext);
 
     useEffect(() => {
@@ -22,14 +21,6 @@ const Dashboard = () => {
             }
         });
     }, []);
-
-    const handleLogout = () => {
-        API.logOut((res, err) => {
-            if (res && res.status === 200) {
-                history.push('/');
-            }
-        });
-    }
 
     return (
         <div className='Dashboard'>
@@ -56,8 +47,6 @@ const Dashboard = () => {
                     }
                 </div>
             </div>
-            Dashboard component works!!! With new changes
-            <button className="btn btn-danger" onClick={handleLogout}>Logout</button>
         </div>
     );
 };
