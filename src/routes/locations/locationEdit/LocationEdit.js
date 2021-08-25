@@ -12,12 +12,12 @@ import { API } from '../../../util/API';
 
 const LocationEdit = () => {
     const routeLocation = useLocation();
-    const slug = routeLocation.pathname.split('/location/')[1];
+    const locationId = routeLocation.pathname.split('/location/')[1];
     const [location, setLocation] = useState({});
     const [state, dispatch] = useContext(AppContext);
 
     useEffect(() => {
-        API.getLocationBySlug(slug, (res, err) => {
+        API.getLocationById(locationId, (res, err) => {
             if (res && res.status === 200) {
                 setLocation(res.data);
             }
@@ -34,23 +34,23 @@ const LocationEdit = () => {
         <div className='LocationEdit'>
             {
                 state.tabView === TAB_GENERAL &&
-                <GeneralTabView/>
+                <GeneralTabView location={location}/>
             }
             {
                 state.tabView === TAB_THUMBNAIL &&
-                <ThumbnailTabView/>
+                <ThumbnailTabView location={location}/>
             }
             {
                 state.tabView === TAB_UNIT &&
-                <UnitTabView/>
+                <UnitTabView location={location}/>
             }
             {
                 state.tabView === TAB_MEDIA &&
-                <MediaTabView/>
+                <MediaTabView location={location}/>
             }
             {
                 state.tabView === TAB_PAYMENT &&
-                <PaymentTabView/>
+                <PaymentTabView location={location}/>
             }
         </div>
     );

@@ -20,6 +20,12 @@ html
     .gunMetalBackground
         background-color: $gunMetalGrey
 
+    .requiredField
+        &::after
+            content: ' *'
+            font-weight: bold
+            color: red
+
     .lightTheme
         .Toolbar
             background-color: lighten($gunMetalGrey, 20)

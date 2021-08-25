@@ -57,12 +57,12 @@ export const API = {
        .then(cb, err => cb(null, err));
     },
     /**
-     * Gets location data for a specific location for the given URL slug.
-     * @param {String} slug URL slug for the specific location.
+     * Gets location data for a specific location for the given Id.
+     * @param {String} id Id for the specific location.
      * @param {Function} cb Callback function that returns response or error of the server request.
      */
-    getLocationBySlug: (slug, cb) => {
-        axios.get(`${baseUrl}/api/location/${slug}`)
+    getLocationById: (id, cb) => {
+        axios.get(`${baseUrl}/portal/location/${id}`, config)
         .then(cb, err => cb(null, err));
    }
 }

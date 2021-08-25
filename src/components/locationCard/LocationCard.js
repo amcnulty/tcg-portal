@@ -40,7 +40,7 @@ const LocationCard = ({location}) => {
                         </div>
                     </div>
                     <div className="card-footer cardFooterBackground d-flex justify-content-between">
-                        <Link className='btn btn-primary' to={`/location/${location.slug}`}>Manage</Link>
+                        <Link className='btn btn-primary' to={`/location/${location._id}`}>Manage</Link>
                         <Dropdown isOpen={dropdownOpen} toggle={toggle}>
                             <DropdownToggle tag='span'>
                                 <button className="btn">
