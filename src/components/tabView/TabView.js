@@ -13,7 +13,7 @@ const TabView = props => {
 
     return (
         <div className='TabView'>
-            <div className="container mb-5 pb-5">
+            <div className="mb-5 pb-5">
                 <h2 className='my-4'>{props.header}</h2>
                 <p>{props.description}</p>
                 {props.children}

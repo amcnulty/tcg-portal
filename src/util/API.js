@@ -64,5 +64,14 @@ export const API = {
     getLocationById: (id, cb) => {
         axios.get(`${baseUrl}/portal/location/${id}`, config)
         .then(cb, err => cb(null, err));
+   },
+   /**
+    * Updates a location with the given payload. Make sure payload is in the form of the location record.
+    * @param {Object} data Request payload for updating a location
+    * @param {Function} cb Callback function that returns response or error of the server request.
+    */
+   updateLocation: (data, cb) => {
+       axios.put(baseUrl + '/portal/location', data, config)
+       .then(cb, err => cb(null, err));
    }
 }

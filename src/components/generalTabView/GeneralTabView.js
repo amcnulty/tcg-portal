@@ -1,28 +1,80 @@
 import React, { useEffect, useState } from 'react';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 import { TAB_THUMBNAIL } from '../../shared/Constants';
+import { API } from '../../util/API';
+import CoordinatePicker from '../coordinatePicker/CoordinatePicker';
 import TabView from '../tabView/TabView';
 
 const GeneralTabView = ({location}) => {
     const [name, setName] = useState('');
+    const [slug, setSlug] = useState('');
     const [addressFirstLine, setAddressFirstLine] = useState('');
     const [addressSecondLine, setAddressSecondLine] = useState('');
-    const [slug, setSlug] = useState('');
+    const [coordinatesFromMap, setCoordinatesFromMap] = useState();
+    const [lat, setLat] = useState('');
+    const [long, setLong] = useState('');
+    const [shortDescription, setShortDescription] = useState('');
+    const [longDescription, setLongDescription] = useState('');
+    const [currentFeature, setCurrentFeature] = useState('');
+    const [features, setFeatures] = useState([]);
     const [contactName, setContactName] = useState('');
     const [contactPhone, setContactPhone] = useState('');
     const [contactEmail, setContactEmail] = useState('');
 
+    const [wasValidated, setWasValidated] = useState(false);
+    const [slugErrorMessage, setSlugErrorMessage] = useState('');
+
     useEffect(() => {
         setName(location.name ? location.name : '');
+        setSlug(location.slug ? location.slug : '');
         setAddressFirstLine(location.addressFirstLine ? location.addressFirstLine : '');
         setAddressSecondLine(location.addressSecondLine ? location.addressSecondLine : '');
-        setSlug(location.slug ? location.slug : '');
+        setLat(location.coordinates && location.coordinates.length > 1 ? location.coordinates[0] : 39.087692);
+        setLong(location.coordinates && location.coordinates.length > 1 ? location.coordinates[1] : -97.611850);
+        setShortDescription(location.shortDescription ? location.shortDescription : '');
+        setLongDescription(location.longDescription ? location.longDescription : '');
+        setFeatures(location.features ? location.features : []);
         setContactName(location.contactName ? location.contactName : '');
         setContactPhone(location.contactPhone ? location.contactPhone : '');
         setContactEmail(location.contactEmail ? location.contactEmail : '');
     }, [location]);
 
     const handleFormSubmit = e => {
-        e.preventDefault();
+        if (!e.target.checkValidity()) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        else {
+            console.log('submitting form!');
+            e.preventDefault();
+            // Try to update the item and if the slug is already taken show error message.
+            const requestObject = {
+                _id: location._id,
+                ...(name && {name}),
+                ...(slug && {slug}),
+                ...(addressFirstLine && {addressFirstLine}),
+                ...(addressSecondLine && {addressSecondLine}),
+                ...((lat && long) && {coordinates: [lat, long]}),
+                ...(shortDescription && {shortDescription}),
+                ...(longDescription && {longDescription}),
+                ...(features && {features}),
+                ...(contactName && {contactName}),
+                ...(contactPhone && {contactPhone}),
+                ...(contactEmail && {contactEmail})
+            };
+            console.log('requestObject :>> ', requestObject);
+            API.updateLocation(requestObject, (res, err) => {
+                if (res && res.status === 200) {
+                    console.log('success!');
+                }
+                else if (err) {
+                    console.log(err);
+                }
+            });
+            // e.target.elements.namedItem('slug').setCustomValidity('Current value already in use, url slug must be unique. Choose another value.');
+            // setSlugErrorMessage('Current value already in use, url slug must be unique. Choose another value.')
+        }
+        setWasValidated(true);
     }
 
     const handleHideLocation = () => {
@@ -32,6 +84,25 @@ const GeneralTabView = ({location}) => {
     const handleDeleteLocation = () => {
 
     }
+
+    const handleSlugChange = e => {
+        if (/[^a-z0-9-_]/g.test(e.target.value)) {
+            e.target.setCustomValidity('Field is required and must not contain spaces, uppercase letters or special characters (other than - and _).');
+            setSlugErrorMessage('Field is required and must not contain spaces, uppercase letters or special characters (other than - and _).');
+        }
+        else {
+            e.target.setCustomValidity('');
+        }
+        setSlug(e.target.value);
+    }
+
+    const handlePreview = () => {
+
+    }
+    
+    const [modal, setModal] = useState(false);
+
+    const toggle = () => setModal(!modal);
 
     return (
         <div className='GeneralTabView'>
@@ -66,7 +137,7 @@ const GeneralTabView = ({location}) => {
                     </div>
                 </div>
                 <div className='card editDetailCard p-4'>
-                    <form onSubmit={handleFormSubmit}>
+                    <form className={`needs-validation ${wasValidated ? 'was-validated' : ''}`} onSubmit={handleFormSubmit} noValidate>
                         <h5>Details</h5>
                         <p>Use this section for filling out the basic details for this location.</p>
                         <div className="d-flex flex-column my-4">
@@ -79,7 +150,11 @@ const GeneralTabView = ({location}) => {
                                 placeholder='Enter Display Name'
                                 value={name}
                                 onChange={e => setName(e.target.value)}
+                                required
                             />
+                            <div className="invalid-feedback fw-bold">
+                                Display name is a required field please enter a display name above.
+                            </div>
                         </div>
                         <div className="d-flex flex-column my-4">
                             <label className='form-label requiredField' htmlFor="slug">URL Slug</label>
@@ -91,8 +166,12 @@ const GeneralTabView = ({location}) => {
                                 type="text"
                                 placeholder='florida-garage'
                                 value={slug}
-                                onChange={e => setSlug(e.target.value)}
+                                onChange={handleSlugChange}
+                                required
                             />
+                            <div className="invalid-feedback fw-bold">
+                                {slugErrorMessage}
+                            </div>
                         </div>
                         <div className="d-flex flex-column my-4">
                             <label className='form-label' htmlFor="addressFirstLine">Address (First Line)</label>
@@ -121,13 +200,110 @@ const GeneralTabView = ({location}) => {
                             />
                         </div>
                         <div className="d-flex flex-column my-4">
-                            Coordinates
+                            <h6>Coordinates</h6>
+                            <p>The exact coordinates to display the marker on the map for this location. You can manually enter the <i>latitude</i> and <i>longitude</i> or you can choose the point from the map by selecting <b>Choose From Map</b>.</p>
+                            <div className='row align-items-end'>
+                                <div className='d-flex flex-column col-12 col-md-3'>
+                                    <label className='requiredField' htmlFor="lat">Latitude</label>
+                                    <input
+                                        id='lat'
+                                        className='form-control'
+                                        type="number"
+                                        max='90'
+                                        min='-90'
+                                        step='any'
+                                        value={lat}
+                                        onChange={e => setLat(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <div className='d-flex flex-column col-12 col-md-3 mt-4'>
+                                    <label className='requiredField' htmlFor="log">Longitude</label>
+                                    <input
+                                        id='log'
+                                        className='form-control'
+                                        type="number"
+                                        max='180'
+                                        min='-180'
+                                        step='any'
+                                        value={long}
+                                        onChange={e => setLong(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <div className='col-12 col-md-6'>
+                                    <button className="btn btn-outline-primary mt-4" type='button' onClick={toggle}>Choose From Map</button>
+                                </div>
+                            </div>
                         </div>
                         <div className="d-flex flex-column my-4">
-                            Short Description
+                            <label className='form-label' htmlFor="shortDescription">Short Description</label>
+                            <small className='text-secondary'>Description of this location to be shown on the map marker popup. Limit 140 characters.</small>
+                            <textarea
+                                id='shortDescription'
+                                className='form-control'
+                                maxLength={140}
+                                value={shortDescription}
+                                onChange={e => setShortDescription(e.target.value)}
+                            />
                         </div>
                         <div className="d-flex flex-column my-4">
-                            Long Description
+                            <label className='form-label' htmlFor="longDescription">Long Description</label>
+                            <small className='text-secondary'>Description of this location to be shown on the location detail page. This will be shown at the top of the page and should include a description of the features and services.</small>
+                            <textarea
+                                id='longDescription'
+                                className='form-control'
+                                rows={6}
+                                value={longDescription}
+                                onChange={e => setLongDescription(e.target.value)}
+                            />
+                        </div>
+                        <div className="d-flex flex-column my-4">
+                            <label className='form-label' htmlFor="features">Features</label>
+                            <small className='text-secondary'>A list of features and services provided at this location. Each item will appear as an item in a bulleted list. Enter each item in the input below and press <b>Add Feature</b> to add it to the list. To remove an item from the list press the <b>&times;</b> next to the item.</small>
+                            <form onSubmit={e => e.preventDefault()}>
+                                <div className="input-group">
+                                    <input
+                                        id='features'
+                                        type="text"
+                                        className='form-control'
+                                        placeholder='Enter Feature'
+                                        value={currentFeature}
+                                        onChange={e => setCurrentFeature(e.target.value)}
+                                    />
+                                    <button
+                                        className="btn btn-outline-primary"
+                                        onClick={() => setFeatures([...features, currentFeature])}
+                                    >
+                                        Add Feature
+                                    </button>
+                                </div>
+                            </form>
+                            {
+                                features.length === 0 &&
+                                <p className="text-secondary pt-5">Currently no features. Add features above and view them here...</p>
+                            }
+                            <ul className='list-unstyled mt-3'>
+                                {
+                                    features.map((feature, index) => (
+                                        <li className='my-2' key={index}>
+                                            <div className="badge bg-secondary">
+                                                <span>{feature}</span>
+                                                <button
+                                                    className="btn btn-close btn-close-white"
+                                                    type='button'
+                                                    onClick={() => {
+                                                        const newFeatures = [...features];
+                                                        newFeatures.splice(index, 1);
+                                                        setFeatures(newFeatures);
+                                                    }}
+                                                >
+                                                </button>
+                                            </div>
+                                        </li>
+                                    ))
+                                }
+                            </ul>
                         </div>
                         <h5>Contact Info</h5>
                         <div className="d-flex flex-column my-4">
@@ -149,10 +325,14 @@ const GeneralTabView = ({location}) => {
                                 id='contactPhone'
                                 className='form-control'
                                 type="text"
+                                pattern='[\d]{3}-[\d]{3}-[\d]{4}|[\d]{10}'
                                 placeholder='Enter Contact Phone XXX-XXX-XXXX Format'
                                 value={contactPhone}
                                 onChange={e => setContactPhone(e.target.value)}
                             />
+                            <div className="invalid-feedback fw-bold">
+                                Phone number must contain only numbers or numbers separated with dashes, no spaces, letters or special characters allowed (other than -).
+                            </div>
                         </div>
                         <div className="d-flex flex-column my-4">
                             <label className='form-label' htmlFor="contactEmail">Contact Email</label>
@@ -160,15 +340,42 @@ const GeneralTabView = ({location}) => {
                             <input
                                 id='contactEmail'
                                 className='form-control'
-                                type="text"
+                                type="email"
                                 placeholder='Enter Contact Email'
                                 value={contactEmail}
                                 onChange={e => setContactEmail(e.target.value)}
                             />
+                            <div className="invalid-feedback fw-bold">
+                                Email address entered is not valid!
+                            </div>
                         </div>
+                        {
+                            location.isPublished && <button type='submit' className="btn btn-primary">Save</button>
+                        }
+                        <button className="btn btn-secondary ms-2" type='button' onClick={handlePreview}>Preview</button>
                     </form>
                 </div>
             </TabView>
+            <Modal isOpen={modal} toggle={toggle} size='lg'>
+                <ModalHeader>Choose Location On Map</ModalHeader>
+                <ModalBody>
+                    <p>Click on map to set marker location when finished click continue.</p>
+                    <CoordinatePicker
+                        center={location.coordinates ? location.coordinates : [lat, long]}
+                        onCoordinateSelect={setCoordinatesFromMap}
+                    />
+                </ModalBody>
+                <ModalFooter>
+                    <button className="btn" onClick={toggle}>CANCEL</button>
+                    <button
+                        className="btn btn-primary"
+                        disabled={!coordinatesFromMap}
+                        onClick={() => {setLat(coordinatesFromMap[0]); setLong(coordinatesFromMap[1]); toggle();}}
+                    >
+                        Continue
+                    </button>
+                </ModalFooter>
+            </Modal>
         </div>
     );
 };
