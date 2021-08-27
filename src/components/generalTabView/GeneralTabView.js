@@ -1,11 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
+import { UPDATE_PREVIEW } from '../../context/ActionTypes';
+import { AppContext } from '../../context/Store';
 import { TAB_THUMBNAIL } from '../../shared/Constants';
 import { API } from '../../util/API';
 import CoordinatePicker from '../coordinatePicker/CoordinatePicker';
 import TabView from '../tabView/TabView';
 
 const GeneralTabView = ({location}) => {
+    const [state, dispatch] = useContext(AppContext);
+
     const [name, setName] = useState('');
     const [slug, setSlug] = useState('');
     const [addressFirstLine, setAddressFirstLine] = useState('');
@@ -23,6 +27,15 @@ const GeneralTabView = ({location}) => {
 
     const [wasValidated, setWasValidated] = useState(false);
     const [slugErrorMessage, setSlugErrorMessage] = useState('');
+
+    /**
+     * Every time a field changes update the preview so when this tab is exited the preview retains its data.
+     */
+    useEffect(() => {
+        return () => {
+            updatePreview();
+        }
+    }, [name, slug, addressFirstLine, addressSecondLine, coordinatesFromMap, lat, long, shortDescription, longDescription, currentFeature, features, contactName, contactPhone, contactEmail]);
 
     useEffect(() => {
         setName(location.name ? location.name : '');
@@ -45,7 +58,6 @@ const GeneralTabView = ({location}) => {
             e.stopPropagation();
         }
         else {
-            console.log('submitting form!');
             e.preventDefault();
             // Try to update the item and if the slug is already taken show error message.
             const requestObject = {
@@ -62,7 +74,6 @@ const GeneralTabView = ({location}) => {
                 ...(contactPhone && {contactPhone}),
                 ...(contactEmail && {contactEmail})
             };
-            console.log('requestObject :>> ', requestObject);
             API.updateLocation(requestObject, (res, err) => {
                 if (res && res.status === 200) {
                     console.log('success!');
@@ -95,9 +106,28 @@ const GeneralTabView = ({location}) => {
         }
         setSlug(e.target.value);
     }
-
-    const handlePreview = () => {
-
+    /**
+     * Updates the preview in context so when it is time to show the preview data from this tab will be included.
+     */
+    const updatePreview = () => {
+        const previewLocation = {
+            ...(name && {name}),
+            ...(slug && {slug}),
+            ...(addressFirstLine && {addressFirstLine}),
+            ...(addressSecondLine && {addressSecondLine}),
+            ...((lat && long) && {coordinates: [lat, long]}),
+            ...(shortDescription && {shortDescription}),
+            ...(longDescription && {longDescription}),
+            ...(features && {features}),
+            ...(contactName && {contactName}),
+            ...(contactPhone && {contactPhone}),
+            ...(contactEmail && {contactEmail})
+        };
+        const payload = {
+            ...state.previewLocation,
+            ...previewLocation
+        };
+        dispatch({type: UPDATE_PREVIEW, payload: payload});
     }
     
     const [modal, setModal] = useState(false);
@@ -110,6 +140,9 @@ const GeneralTabView = ({location}) => {
                 header={`General ${location.name ? '- ' + location.name : ''}`}
                 description='This section is for editing the general details about the location including the name, description, address, contact and coordinates.'
                 nextView={TAB_THUMBNAIL}
+                formId='generalForm'
+                showSaveButton={location.isPublished}
+                updatePreview={updatePreview}
             >
                 <div className="card actionsSection p-4 my-4">
                     <h5>Quick Actions</h5>
@@ -137,7 +170,7 @@ const GeneralTabView = ({location}) => {
                     </div>
                 </div>
                 <div className='card editDetailCard p-4'>
-                    <form className={`needs-validation ${wasValidated ? 'was-validated' : ''}`} onSubmit={handleFormSubmit} noValidate>
+                    <form id='generalForm' className={`needs-validation ${wasValidated ? 'was-validated' : ''}`} onSubmit={handleFormSubmit} noValidate>
                         <h5>Details</h5>
                         <p>Use this section for filling out the basic details for this location.</p>
                         <div className="d-flex flex-column my-4">
@@ -349,10 +382,6 @@ const GeneralTabView = ({location}) => {
                                 Email address entered is not valid!
                             </div>
                         </div>
-                        {
-                            location.isPublished && <button type='submit' className="btn btn-primary">Save</button>
-                        }
-                        <button className="btn btn-secondary ms-2" type='button' onClick={handlePreview}>Preview</button>
                     </form>
                 </div>
             </TabView>

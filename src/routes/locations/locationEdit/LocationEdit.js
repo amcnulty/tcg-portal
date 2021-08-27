@@ -5,7 +5,7 @@ import MediaTabView from '../../../components/mediaTabView/MediaTabView';
 import PaymentTabView from '../../../components/paymentTabView/PaymentTabView';
 import ThumbnailTabView from '../../../components/thumbnailTabView/ThumbnailTabView';
 import UnitTabView from '../../../components/unitTabView/UnitTabView';
-import { SET_TABVIEW } from '../../../context/ActionTypes';
+import { SET_TABVIEW, UPDATE_PREVIEW } from '../../../context/ActionTypes';
 import { AppContext } from '../../../context/Store';
 import { TAB_GENERAL, TAB_MEDIA, TAB_PAYMENT, TAB_THUMBNAIL, TAB_UNIT } from '../../../shared/Constants';
 import { API } from '../../../util/API';
@@ -30,6 +30,10 @@ const LocationEdit = () => {
             }
         });
         return () => {
+            // reset the preview to empty so the data doesn't cross with other locatios that get opened.
+            setTimeout(() => {
+                dispatch({type: UPDATE_PREVIEW, payload: {}});
+            }, 1000);
             dispatch({type: SET_TABVIEW, payload: TAB_GENERAL});
         }
     }, []);

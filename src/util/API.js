@@ -107,5 +107,13 @@ export const API = {
     */
    updateLocation: (data, cb) => {
        PUT('/portal/location', data, cb, {type: TOAST_TYPES.SUCCESS, message: 'Update Successful!'});
+   },
+   /**
+    * Creates a location preview record.
+    * @param {String} data JSON data representing the location object
+    * @param {Function} cb Callback function that returns response or error of the server request.
+    */
+   createPreview: (data, cb) => {
+       POST('/portal/location/preview', data, cb, { type: TOAST_TYPES.SUCCESS, message: 'Preview has been generated!'});
    }
 }
