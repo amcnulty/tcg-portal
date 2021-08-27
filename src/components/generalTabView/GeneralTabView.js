@@ -42,8 +42,8 @@ const GeneralTabView = ({location}) => {
         setSlug(location.slug ? location.slug : '');
         setAddressFirstLine(location.addressFirstLine ? location.addressFirstLine : '');
         setAddressSecondLine(location.addressSecondLine ? location.addressSecondLine : '');
-        setLat(location.coordinates && location.coordinates.length > 1 ? location.coordinates[0] : 39.087692);
-        setLong(location.coordinates && location.coordinates.length > 1 ? location.coordinates[1] : -97.611850);
+        setLat(location.coordinates && location.coordinates.length > 1 ? location.coordinates[0] : 40.68924454236941);
+        setLong(location.coordinates && location.coordinates.length > 1 ? location.coordinates[1] : -74.04454171657564);
         setShortDescription(location.shortDescription ? location.shortDescription : '');
         setLongDescription(location.longDescription ? location.longDescription : '');
         setFeatures(location.features ? location.features : []);
@@ -390,7 +390,7 @@ const GeneralTabView = ({location}) => {
                 <ModalBody>
                     <p>Click on map to set marker location when finished click continue.</p>
                     <CoordinatePicker
-                        center={location.coordinates ? location.coordinates : [lat, long]}
+                        center={(lat !== '' && long !== '') ? [lat, long] : location.coordinates ? location.coordinates : [lat, long]}
                         onCoordinateSelect={setCoordinatesFromMap}
                     />
                 </ModalBody>

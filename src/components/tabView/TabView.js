@@ -46,7 +46,7 @@ const TabView = props => {
                         {
                             props.showSaveButton && <button form={props.formId} type='submit'  className="btn btn-primary">Save</button>
                         }
-                        <button className="btn btn-secondary ms-2" onClick={handlePreviewClick}>Preview</button>
+                        <button className="btn btn-secondary ms-2" onClick={handlePreviewClick}>Create Preview</button>
                     </div>
                 </div>
                 <div className="tabViewNavSection d-flex justify-content-between my-5">

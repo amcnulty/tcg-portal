@@ -17,7 +17,7 @@ function EventComponent(props) {
 }
 
 const CoordinatePicker = (props) => {
-    const [zoom, setZoom] = useState(5);
+    const [zoom, setZoom] = useState(15);
     const [markerLocation, setMarkerLocation] = useState();
 
     useEffect(() => {
@@ -29,7 +29,7 @@ const CoordinatePicker = (props) => {
     return (
         <div className='CoordinatePicker'>
             <MapContainer
-                center={props.center.length > 1 ? props.center : [39.087692, -97.611850]}
+                center={props.center.length > 1 ? props.center : [40.68924454236941, -74.04454171657564]}
                 zoom={zoom}
                 scrollWheelZoom={true}
             >
@@ -48,9 +48,9 @@ const CoordinatePicker = (props) => {
                     opacity={zoom > 7 ? 1 : 0}
                 />
                 {
-                    markerLocation &&
+                    (markerLocation || props.center) &&
                     <Marker
-                        position={markerLocation}
+                        position={markerLocation ? markerLocation : props.center}
                     />
                 }
             </MapContainer>
