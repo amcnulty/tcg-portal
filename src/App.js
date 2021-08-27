@@ -11,8 +11,32 @@ import MobileHeader from './shared/mobileHeader/MobileHeader';
 import Store from './context/Store';
 import Users from './routes/users/Users';
 import LocationEdit from './routes/locations/locationEdit/LocationEdit';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { useEffect } from 'react';
+import { HELPERS, TOAST_TYPES } from './util/helpers';
 
 function App() {
+
+  useEffect(() => {
+    HELPERS.addToastListener((type, message) => {
+      const actionMap = {
+        [TOAST_TYPES.INFO]: showInfoToast,
+        [TOAST_TYPES.SUCCESS]: showSuccessToast,
+        [TOAST_TYPES.WARNING]: showWarningToast,
+        [TOAST_TYPES.ERROR]: showErrorToast
+      };
+      actionMap[type](message);
+    });
+  }, []);
+
+  const showInfoToast = (message) => toast.info(message);
+  const showSuccessToast = (message) => toast.success(message);
+  const showWarningToast = (message) => toast.warning(message);
+  const showErrorToast = (error) => {
+    error && toast.error(`${error.status} ${error.statusText}: ${error.data}`);
+  }
+  
   return (
     <Store>
       <div className="App lightTheme">
@@ -79,6 +103,7 @@ function App() {
           </div>
         </HashRouter>
       </div>
+      <ToastContainer/>
     </Store>
   );
 }

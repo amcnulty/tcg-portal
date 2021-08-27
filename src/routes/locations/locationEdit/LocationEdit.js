@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 import GeneralTabView from '../../../components/generalTabView/GeneralTabView';
 import MediaTabView from '../../../components/mediaTabView/MediaTabView';
 import PaymentTabView from '../../../components/paymentTabView/PaymentTabView';
@@ -12,6 +12,7 @@ import { API } from '../../../util/API';
 
 const LocationEdit = () => {
     const routeLocation = useLocation();
+    const history = useHistory();
     const locationId = routeLocation.pathname.split('/location/')[1];
     const [location, setLocation] = useState({});
     const [state, dispatch] = useContext(AppContext);
@@ -23,6 +24,9 @@ const LocationEdit = () => {
             }
             else {
                 console.log(err);
+                if (err.response.status === 401) {
+                    history.push('/locations');
+                }
             }
         });
         return () => {

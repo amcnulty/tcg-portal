@@ -1,7 +1,52 @@
 import axios from "axios"
+import { HELPERS, TOAST_TYPES } from "./helpers";
 
 const baseUrl = (process.env.NODE_ENV === 'production') ? 'https://contractorsgarage.com' : 'http://localhost:3005';
 const config = { withCredentials: true };
+
+const GET = (endpoint, cb, successToastData, suppressErrorToast) => {
+    axios.get(baseUrl + endpoint, config)
+    .then(res => {
+        successToastData && HELPERS.showToast(successToastData.type, successToastData.message);
+        cb(res);
+    }, (err) => {
+        suppressErrorToast ?? HELPERS.showToast(TOAST_TYPES.ERROR, err.response);
+        cb(null, err);
+    });
+}
+
+const POST = (endpoint, data, cb, successToastData, suppressErrorToast) => {
+    axios.post(baseUrl + endpoint, data, config)
+    .then(res => {
+        successToastData && HELPERS.showToast(successToastData.type, successToastData.message);
+        cb(res);
+    }, (err) => {
+        suppressErrorToast ?? HELPERS.showToast(TOAST_TYPES.ERROR, err.response);
+        cb(null, err);
+    });
+}
+
+const PUT = (endpoint, data, cb, successToastData, suppressErrorToast) => {
+    axios.put(baseUrl + endpoint, data, config)
+    .then(res => {
+        successToastData && HELPERS.showToast(successToastData.type, successToastData.message);
+        cb(res);
+    }, (err) => {
+        suppressErrorToast ?? HELPERS.showToast(TOAST_TYPES.ERROR, err.response);
+        cb(null, err);
+    });
+}
+
+const DELETE = (endpoint, cb, successToastData, suppressErrorToast) => {
+    axios.delete(baseUrl + endpoint, config)
+    .then(res => {
+        successToastData && HELPERS.showToast(successToastData.type, successToastData.message);
+        cb(res);
+    }, (err) => {
+        suppressErrorToast ?? HELPERS.showToast(TOAST_TYPES.ERROR, err.response);
+        cb(null, err);
+    });
+}
 
 export const API = {
     /*
@@ -15,13 +60,8 @@ export const API = {
      * Checks if a user is currently logged in with a session.
      * @param {Function} cb Callback function that returns response or error of the server request.
      */
-    isLoggedIn: (cb) => {
-        axios.get(baseUrl + '/api/user/is-logged-in', config)
-        .then(res => {
-            cb(res);
-        }, err => {
-            cb(null, err);
-        });
+    isLoggedIn(cb) {
+        GET('/api/user/is-logged-in', cb);
     },
     /**
      * Logs a user in and creates a session.
@@ -29,21 +69,18 @@ export const API = {
      * @param {Function} cb Callback function that returns response or error of the server request.
      */
     logIn: (req, cb) => {
-        axios.post(baseUrl + '/api/user/login', req, config)
-        .then(cb, err => cb(null, err));
+        POST('/api/user/login', req, cb);
     },
     /**
      * Logs a user out and destroys the current session.
      * @param {Function} cb Callback function that returns response or error of the server request.
      */
     logOut: (cb) => {
-        axios.post(baseUrl + '/api/user/logout', null, config)
-        .then(cb, err => cb(null, err));
+        POST('/api/user/logout', null, cb);
     },
     
     getAllUsers: (cb) => {
-        axios.get(baseUrl + '/portal/user/get-all-users', config)
-        .then(cb, err => cb(null, err));
+        GET('/portal/user/get-all-users', cb, null, true);
     },
     /*
     *          !!##########################!!
@@ -53,8 +90,7 @@ export const API = {
     *          !!##########################!!
     */
    getLocations: (cb) => {
-       axios.get(baseUrl + '/portal/locations', config)
-       .then(cb, err => cb(null, err));
+       GET('/portal/locations', cb);
     },
     /**
      * Gets location data for a specific location for the given Id.
@@ -62,8 +98,7 @@ export const API = {
      * @param {Function} cb Callback function that returns response or error of the server request.
      */
     getLocationById: (id, cb) => {
-        axios.get(`${baseUrl}/portal/location/${id}`, config)
-        .then(cb, err => cb(null, err));
+        GET(`/portal/location/${id}`, cb);
    },
    /**
     * Updates a location with the given payload. Make sure payload is in the form of the location record.
@@ -71,7 +106,6 @@ export const API = {
     * @param {Function} cb Callback function that returns response or error of the server request.
     */
    updateLocation: (data, cb) => {
-       axios.put(baseUrl + '/portal/location', data, config)
-       .then(cb, err => cb(null, err));
+       PUT('/portal/location', data, cb, {type: TOAST_TYPES.SUCCESS, message: 'Update Successful!'});
    }
 }
