@@ -15,6 +15,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useEffect } from 'react';
 import { HELPERS, TOAST_TYPES } from './util/helpers';
+import ScrollToTop from './components/scrollToTop/ScrollToTop';
 
 function App() {
 
@@ -56,7 +57,8 @@ function App() {
                 </>
               )}
             />
-            <div className="col-md-10 mainContent">
+            <div id='mainContent' className="col-md-10 mainContent">
+                <ScrollToTop/>
                 <Switch>
                   <Route
                     path='/'
