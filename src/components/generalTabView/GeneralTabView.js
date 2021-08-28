@@ -326,9 +326,11 @@ const GeneralTabView = ({location}) => {
                                                     className="btn btn-close btn-close-white"
                                                     type='button'
                                                     onClick={() => {
-                                                        const newFeatures = [...features];
-                                                        newFeatures.splice(index, 1);
-                                                        setFeatures(newFeatures);
+                                                        if (window.confirm('Are you sure you want to delete this feature?')) {
+                                                            const newFeatures = [...features];
+                                                            newFeatures.splice(index, 1);
+                                                            setFeatures(newFeatures);
+                                                        }
                                                     }}
                                                 >
                                                 </button>
