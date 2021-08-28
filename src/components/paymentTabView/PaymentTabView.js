@@ -2,14 +2,14 @@ import React from 'react';
 import { TAB_MEDIA } from '../../shared/Constants';
 import TabView from '../tabView/TabView';
 
-const PaymentTabView = () => {
+const PaymentTabView = ({location}) => {
     const handleFormSubmit = e => {
         e.preventDefault();
     }
     return (
         <div className='PaymentTabView'>
             <TabView
-                header='Payment Processing'
+                header={`Payment Processing ${location.name ? '- ' + location.name : ''}`}
                 description='This section is for enabling payment processing with PayPal for this location. Optional fees can be set which will be added to each payment that is made.'
                 previousView={TAB_MEDIA}
             >

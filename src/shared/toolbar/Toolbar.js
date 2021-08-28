@@ -6,6 +6,7 @@ import { AppContext } from '../../context/Store';
 import './Toolbar.sass';
 import { TAB_GENERAL, TAB_MEDIA, TAB_PAYMENT, TAB_THUMBNAIL, TAB_UNIT } from '../Constants';
 import { SET_TABVIEW } from '../../context/ActionTypes';
+import { HELPERS } from '../../util/helpers';
 
 const Toolbar = () => {
     const location = useLocation();
@@ -54,7 +55,7 @@ const Toolbar = () => {
                                     href={void(0)}
                                     onClick={() => dispatch({type: SET_TABVIEW, payload: TAB_GENERAL})}
                                 >
-                                    General
+                                    {HELPERS.getTabNameFromTabView(TAB_GENERAL)}
                                 </a>
                             </li>
                             <li className='mt-2'>
@@ -63,7 +64,7 @@ const Toolbar = () => {
                                     href={void(0)}
                                     onClick={() => dispatch({type: SET_TABVIEW, payload: TAB_THUMBNAIL})}
                                 >
-                                    Thumbnail
+                                    {HELPERS.getTabNameFromTabView(TAB_THUMBNAIL)}
                                 </a>
                             </li>
                             <li className='mt-2'>
@@ -72,7 +73,7 @@ const Toolbar = () => {
                                     href={void(0)}
                                     onClick={() => dispatch({type: SET_TABVIEW, payload: TAB_UNIT})}
                                 >
-                                    Unit
+                                    {HELPERS.getTabNameFromTabView(TAB_UNIT)}
                                 </a>
                             </li>
                             <li className='mt-2'>
@@ -81,7 +82,7 @@ const Toolbar = () => {
                                     href={void(0)}
                                     onClick={() => dispatch({type: SET_TABVIEW, payload: TAB_MEDIA})}
                                 >
-                                    Media
+                                    {HELPERS.getTabNameFromTabView(TAB_MEDIA)}
                                 </a>
                             </li>
                             <li className='mt-2'>
@@ -90,7 +91,7 @@ const Toolbar = () => {
                                     href={void(0)}
                                     onClick={() => dispatch({type: SET_TABVIEW, payload: TAB_PAYMENT})}
                                 >
-                                    Payment
+                                    {HELPERS.getTabNameFromTabView(TAB_PAYMENT)}
                                 </a>
                             </li>
                         </ul>

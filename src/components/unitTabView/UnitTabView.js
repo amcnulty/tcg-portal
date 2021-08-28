@@ -5,12 +5,14 @@ import { AppContext } from '../../context/Store';
 import { TAB_MEDIA, TAB_THUMBNAIL } from '../../shared/Constants';
 import { API } from '../../util/API';
 import TabView from '../tabView/TabView';
+import UnitCard from '../unitCard/UnitCard';
 
 const UnitTabView = ({location}) => {
     const [state, dispatch] = useContext(AppContext);
 
     // location fields
     const [unitSummary, setUnitSummary] = useState([]);
+    const [units, setUnits] = useState([]);
 
     // Fields for unit summary creation modal
     const [unitName_create, setUnitName_create] = useState('');
@@ -53,10 +55,11 @@ const UnitTabView = ({location}) => {
         return () => {
             updatePreview();
         }
-    }, [unitSummary]);
+    }, [unitSummary, units]);
 
     useEffect(() => {
         setUnitSummary(location.unitSummary ? location.unitSummary : []);
+        setUnits(location.units ? location.units: []);
     }, [location]);
 
     const handleFormSubmit = e => {
@@ -68,7 +71,9 @@ const UnitTabView = ({location}) => {
             e.preventDefault();
             // Try to update the item and if the slug is already taken show error message.
             const requestObject = {
-                _id: location._id
+                _id: location._id,
+                unitSummary,
+                units
             };
             API.updateLocation(requestObject, (res, err) => {
                 if (res && res.status === 200) {
@@ -203,32 +208,80 @@ const UnitTabView = ({location}) => {
         setSqft_available('');
         setIsEditing_available(false);
         setEditingIndex_available(-1);
-        setAvailableModalPage(1);
         setExistingUnit('');
+        setTimeout(() => {
+            setAvailableModalPage(1);
+        }, 500);
     }
 
     const handleNextClickAvailableModal = () => {
+        const unit = JSON.parse(existingUnit);
         setAvailableModalPage(2);
-        setUnitName_available(existingUnit.unitName ? existingUnit.unitName : '');
-        setMonthlyRent_available(existingUnit.monthlyRent ? existingUnit.monthlyRent : '');
-        setWidth_available(existingUnit.width ? existingUnit.width : '');
-        setHeight_available(existingUnit.height ? existingUnit.height : '');
-        setDepth_available(existingUnit.depth ? existingUnit.depth : '');
-        setSqft_available(existingUnit.squareFeet ? existingUnit.squareFeet : '');
+        setUnitName_available(unit.unitName ? unit.unitName : '');
+        setMonthlyRent_available(unit.monthlyRent ? unit.monthlyRent : '');
+        setWidth_available(unit.width ? unit.width : '');
+        setHeight_available(unit.height ? unit.height : '');
+        setDepth_available(unit.depth ? unit.depth : '');
+        setSqft_available(unit.squareFeet ? unit.squareFeet : '');
     }
-
-    const handleUpdateUnitAvailable = () => {
-
-    }
-
+    
     const handleAddUnitAvailable = () => {
+        const newUnit = {
+            ...(unitName_available && {unitName: unitName_available}),
+            ...(monthlyRent_available && {monthlyRent: monthlyRent_available}),
+            ...(width_available && {width: width_available}),
+            ...(height_available && {height: height_available}),
+            ...(depth_available && {depth: depth_available}),
+            ...(sqft_available && {squareFeet: sqft_available}),
+            available: true
+        };
+        setUnits(units.concat(newUnit));
+        toggleUnitAvailableModal();
+    }
+    
+        const handleUpdateUnitAvailable = () => {
+            const newUnit = {
+            ...(unitName_available && {unitName: unitName_available}),
+            ...(monthlyRent_available && {monthlyRent: monthlyRent_available}),
+            ...(width_available && {width: width_available}),
+            ...(height_available && {height: height_available}),
+            ...(depth_available && {depth: depth_available}),
+            ...(sqft_available && {squareFeet: sqft_available}),
+            available: true
+            };
+            const newUnits = [...units];
+            newUnits.splice(editingIndex_available, 1, newUnit);
+            setUnits(newUnits);
+            toggleUnitAvailableModal();
+        }
 
+    const handleEditUnitAvailable = (index) => {
+        if (units[index]) {
+            setUnitName_available(units[index].unitName);
+            setMonthlyRent_available(units[index].monthlyRent);
+            setWidth_available(units[index].width);
+            setHeight_available(units[index].height);
+            setDepth_available(units[index].depth);
+            setSqft_available(units[index].squareFeet);
+            setIsEditing_available(true);
+            setEditingIndex_available(index);
+            setAvailableModalPage(2);
+            toggleUnitAvailableModal();
+        }
+    }
+
+    const handleDeleteUnitAvailable = (index) => {
+        if (window.confirm('Are you sure you want to delete this unit availability?')) {
+            const newUnits = [...units];
+            newUnits.splice(index, 1);
+            setUnits(newUnits);
+        }
     }
 
     return (
         <div className='UnitTabView'>
             <TabView
-                header='Unit Information'
+                header={`Unit and Pricing Information ${location.name ? '- ' + location.name : ''}`}
                 description='This section is for editing unit information including a summary of the units at this location and a list of what units are currently available.'
                 previousView={TAB_THUMBNAIL}
                 nextView={TAB_MEDIA}
@@ -254,15 +307,11 @@ const UnitTabView = ({location}) => {
                                     {
                                         unitSummary.map((unit, index) => (
                                             <div className='my-2 col-12 col-lg-6 col-xl-4' key={index}>
-                                                <div className="card flex-row align-items-center p-2 bg-light">
-                                                    <b className='me-auto'>{unit.unitName}</b>
-                                                    <button type='button' className="btn btn-link text-secondary" onClick={() => handleEditUnitSummary(index)}>
-                                                        <i className="fas fa-pencil-alt"></i>
-                                                    </button>
-                                                    <button type='button' className="btn btn-link text-danger" onClick={() => handleDeleteUnitSummary(index)}>
-                                                        <i className="fas fa-trash-alt"></i>
-                                                    </button>
-                                                </div>
+                                                <UnitCard
+                                                    unit={unit}
+                                                    onEditClick={() => handleEditUnitSummary(index)}
+                                                    onDeleteClick={() => handleDeleteUnitSummary(index)}
+                                                />
                                             </div>
                                         ))
                                     }
@@ -276,7 +325,26 @@ const UnitTabView = ({location}) => {
                             <div>
                                 <button type='button' className="btn btn-outline-primary" onClick={toggleUnitAvailableModal}>Add Availability</button>
                             </div>
-
+                            {
+                                units.length === 0
+                                ?
+                                <p className="text-secondary pt-5">Currently unit types have been added. Create units with the <b>Add Unit</b> button above.</p>
+                                :
+                                <div className="row">
+                                    {
+                                        units.map((unit, index) => (
+                                            <div className='my-2 col-12 col-lg-6 col-xl-4' key={index}>
+                                                <UnitCard
+                                                    unit={unit}
+                                                    hideTotal
+                                                    onEditClick={() => handleEditUnitAvailable(index)}
+                                                    onDeleteClick={() => handleDeleteUnitAvailable(index)}
+                                                />
+                                            </div>
+                                        ))
+                                    }
+                                </div>
+                            }
                         </div>
                     </form>
                 </div>
@@ -292,9 +360,10 @@ const UnitTabView = ({location}) => {
                     }
                 </ModalHeader>
                 <ModalBody>
-                    <div className="row my-3">
+                    <div className="row my-3 align-items-end">
                         <div className="col-12 col-lg-6">
                             <label className='form-label' htmlFor="unitName">Unit Name</label>
+                            <small className='text-secondary d-block'>Name that describes this unit like 'Small Unit' or 'Large Unit'.</small>
                             <input
                                 id='unitName'
                                 className='form-control'
@@ -417,7 +486,7 @@ const UnitTabView = ({location}) => {
                                         id="existingUnit"
                                         className="form-select"
                                         value={existingUnit}
-                                        onChange={e => setExistingUnit(JSON.parse(e.target.value))}
+                                        onChange={e => setExistingUnit(e.target.value)}
                                     >
                                         <option value='' selected>Select Unit</option>
                                         {
@@ -439,7 +508,7 @@ const UnitTabView = ({location}) => {
                             <div className="col-12 col-lg-6 d-flex flex-column text-center justify-content-center mt-5 mt-lg-0">
                                 <p>Enter values for unit manually</p>
                                 <div>
-                                    <button className="btn btn-outline-secondary">Enter Manually</button>
+                                    <button className="btn btn-outline-secondary" onClick={() => setAvailableModalPage(2)}>Enter Manually</button>
                                 </div>
                             </div>
                         </div>
@@ -447,9 +516,10 @@ const UnitTabView = ({location}) => {
                     {
                         availableModalPage === 2 &&
                         <>
-                            <div className="row my-3">
+                            <div className="row my-3 align-items-end">
                                 <div className="col-12 col-lg-6">
                                     <label className='form-label' htmlFor="unitName">Unit Name</label>
+                                    <small className='text-secondary d-block'>Can be the same as the unit summary name or the specific name/number of this unit like 'Unit 101'.</small>
                                     <input
                                         id='unitName'
                                         className='form-control'
