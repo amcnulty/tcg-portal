@@ -20,7 +20,7 @@ const GeneralTabView = ({location}) => {
     const [shortDescription, setShortDescription] = useState('');
     const [longDescription, setLongDescription] = useState('');
     const [currentFeature, setCurrentFeature] = useState('');
-    const [features, setFeatures] = useState([]);
+    const [features, setFeatures] = useState();
     const [contactName, setContactName] = useState('');
     const [contactPhone, setContactPhone] = useState('');
     const [contactEmail, setContactEmail] = useState('');
@@ -32,24 +32,26 @@ const GeneralTabView = ({location}) => {
      * Every time a field changes update the preview so when this tab is exited the preview retains its data.
      */
     useEffect(() => {
-        return () => {
-            updatePreview();
-        }
+        updatePreview();
     }, [name, slug, addressFirstLine, addressSecondLine, coordinatesFromMap, lat, long, shortDescription, longDescription, currentFeature, features, contactName, contactPhone, contactEmail]);
 
     useEffect(() => {
-        setName(location.name ? location.name : '');
-        setSlug(location.slug ? location.slug : '');
-        setAddressFirstLine(location.addressFirstLine ? location.addressFirstLine : '');
-        setAddressSecondLine(location.addressSecondLine ? location.addressSecondLine : '');
-        setLat(location.coordinates && location.coordinates.length > 1 ? location.coordinates[0] : 40.68924454236941);
-        setLong(location.coordinates && location.coordinates.length > 1 ? location.coordinates[1] : -74.04454171657564);
-        setShortDescription(location.shortDescription ? location.shortDescription : '');
-        setLongDescription(location.longDescription ? location.longDescription : '');
-        setFeatures(location.features ? location.features : []);
-        setContactName(location.contactName ? location.contactName : '');
-        setContactPhone(location.contactPhone ? location.contactPhone : '');
-        setContactEmail(location.contactEmail ? location.contactEmail : '');
+        const locationWithChanges = {
+            ...location,
+            ...state.previewLocation
+        };
+        setName(locationWithChanges.name ? locationWithChanges.name : '');
+        setSlug(locationWithChanges.slug ? locationWithChanges.slug : '');
+        setAddressFirstLine(locationWithChanges.addressFirstLine ? locationWithChanges.addressFirstLine : '');
+        setAddressSecondLine(locationWithChanges.addressSecondLine ? locationWithChanges.addressSecondLine : '');
+        setLat(locationWithChanges.coordinates && locationWithChanges.coordinates.length > 1 ? locationWithChanges.coordinates[0] : '');
+        setLong(locationWithChanges.coordinates && locationWithChanges.coordinates.length > 1 ? locationWithChanges.coordinates[1] : '');
+        setShortDescription(locationWithChanges.shortDescription ? locationWithChanges.shortDescription : '');
+        setLongDescription(locationWithChanges.longDescription ? locationWithChanges.longDescription : '');
+        setFeatures(locationWithChanges.features ? locationWithChanges.features : '');
+        setContactName(locationWithChanges.contactName ? locationWithChanges.contactName : '');
+        setContactPhone(locationWithChanges.contactPhone ? locationWithChanges.contactPhone : '');
+        setContactEmail(locationWithChanges.contactEmail ? locationWithChanges.contactEmail : '');
     }, [location]);
 
     const handleFormSubmit = e => {
@@ -60,21 +62,7 @@ const GeneralTabView = ({location}) => {
         else {
             e.preventDefault();
             // Try to update the item and if the slug is already taken show error message.
-            const requestObject = {
-                _id: location._id,
-                ...(name && {name}),
-                ...(slug && {slug}),
-                ...(addressFirstLine && {addressFirstLine}),
-                ...(addressSecondLine && {addressSecondLine}),
-                ...((lat && long) && {coordinates: [lat, long]}),
-                ...(shortDescription && {shortDescription}),
-                ...(longDescription && {longDescription}),
-                ...(features && {features}),
-                ...(contactName && {contactName}),
-                ...(contactPhone && {contactPhone}),
-                ...(contactEmail && {contactEmail})
-            };
-            API.updateLocation(requestObject, (res, err) => {
+            API.updateLocation(state.previewLocation, (res, err) => {
                 if (res && res.status === 200) {
                     console.log('success!');
                 }
@@ -124,6 +112,7 @@ const GeneralTabView = ({location}) => {
             ...(contactEmail && {contactEmail})
         };
         const payload = {
+            ...location,
             ...state.previewLocation,
             ...previewLocation
         };
@@ -313,32 +302,34 @@ const GeneralTabView = ({location}) => {
                                 </div>
                             </form>
                             {
-                                features.length === 0 &&
+                                !features
+                                ?
                                 <p className="text-secondary pt-5">Currently no features. Add features above and view them here...</p>
+                                :
+                                <ul className='list-unstyled mt-3'>
+                                    {
+                                        features.map((feature, index) => (
+                                            <li className='my-2' key={index}>
+                                                <div className="badge bg-secondary">
+                                                    <span>{feature}</span>
+                                                    <button
+                                                        className="btn btn-close btn-close-white"
+                                                        type='button'
+                                                        onClick={() => {
+                                                            if (window.confirm('Are you sure you want to delete this feature?')) {
+                                                                const newFeatures = [...features];
+                                                                newFeatures.splice(index, 1);
+                                                                setFeatures(newFeatures);
+                                                            }
+                                                        }}
+                                                    >
+                                                    </button>
+                                                </div>
+                                            </li>
+                                        ))
+                                    }
+                                </ul>
                             }
-                            <ul className='list-unstyled mt-3'>
-                                {
-                                    features.map((feature, index) => (
-                                        <li className='my-2' key={index}>
-                                            <div className="badge bg-secondary">
-                                                <span>{feature}</span>
-                                                <button
-                                                    className="btn btn-close btn-close-white"
-                                                    type='button'
-                                                    onClick={() => {
-                                                        if (window.confirm('Are you sure you want to delete this feature?')) {
-                                                            const newFeatures = [...features];
-                                                            newFeatures.splice(index, 1);
-                                                            setFeatures(newFeatures);
-                                                        }
-                                                    }}
-                                                >
-                                                </button>
-                                            </div>
-                                        </li>
-                                    ))
-                                }
-                            </ul>
                         </div>
                         <h5>Contact Info</h5>
                         <div className="d-flex flex-column my-4">
@@ -392,7 +383,7 @@ const GeneralTabView = ({location}) => {
                 <ModalBody>
                     <p>Click on map to set marker location when finished click continue.</p>
                     <CoordinatePicker
-                        center={(lat !== '' && long !== '') ? [lat, long] : location.coordinates ? location.coordinates : [lat, long]}
+                        center={(lat !== '' && long !== '') ? [lat, long] : (location.coordinates && location.coordinates.length > 1) ? location.coordinates : [40.68924454236941, -74.04454171657564]}
                         onCoordinateSelect={setCoordinatesFromMap}
                     />
                 </ModalBody>

@@ -1,4 +1,5 @@
 import React from 'react';
+import './UnitCard.sass';
 
 const UnitCard = props => {
     const {unit} = props;
@@ -14,6 +15,17 @@ const UnitCard = props => {
                         <i className="fas fa-trash-alt"></i>
                     </button>
                 </div>
+                {
+                    props.showAvailable &&
+                    <div className="card-header p-2">
+                        <button
+                            type='button'
+                            className={`availableButton ${unit.available ? 'available' : ''}`}
+                            onClick={props.onAvailableClick}
+                        ></button>
+                        <span className='fw-bold ms-3'>{unit.available ? 'Available' : 'Unavailable'}</span>
+                    </div>
+                }
                 <div className="card-body row">
                     <div className="col-12 col-sm-6">
                         <label className='fw-bold text-secondary'>Rent:</label>

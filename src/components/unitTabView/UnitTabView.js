@@ -11,8 +11,8 @@ const UnitTabView = ({location}) => {
     const [state, dispatch] = useContext(AppContext);
 
     // location fields
-    const [unitSummary, setUnitSummary] = useState([]);
-    const [units, setUnits] = useState([]);
+    const [unitSummary, setUnitSummary] = useState();
+    const [units, setUnits] = useState();
 
     // Fields for unit summary creation modal
     const [unitName_create, setUnitName_create] = useState('');
@@ -30,6 +30,7 @@ const UnitTabView = ({location}) => {
     const [height_available, setHeight_available] = useState('');
     const [depth_available, setDepth_available] = useState('');
     const [sqft_available, setSqft_available] = useState('');
+    const [isAvailable_available, setIsAvailable_available] = useState(true);
 
 
     // form state
@@ -52,14 +53,16 @@ const UnitTabView = ({location}) => {
      * Every time a field changes update the preview so when this tab is exited the preview retains its data.
      */
     useEffect(() => {
-        return () => {
-            updatePreview();
-        }
+        updatePreview();
     }, [unitSummary, units]);
 
     useEffect(() => {
-        setUnitSummary(location.unitSummary ? location.unitSummary : []);
-        setUnits(location.units ? location.units: []);
+        const locationWithChanges = {
+            ...location,
+            ...state.previewLocation
+        };
+        setUnitSummary((locationWithChanges.unitSummary && locationWithChanges.unitSummary.length > 0) ? locationWithChanges.unitSummary : location.unitSummary);
+        setUnits((locationWithChanges.units && locationWithChanges.units.length > 0) ? locationWithChanges.units : location.units);
     }, [location]);
 
     const handleFormSubmit = e => {
@@ -69,13 +72,7 @@ const UnitTabView = ({location}) => {
         }
         else {
             e.preventDefault();
-            // Try to update the item and if the slug is already taken show error message.
-            const requestObject = {
-                _id: location._id,
-                unitSummary,
-                units
-            };
-            API.updateLocation(requestObject, (res, err) => {
+            API.updateLocation(state.previewLocation, (res, err) => {
                 if (res && res.status === 200) {
                     console.log('success!');
                 }
@@ -91,9 +88,11 @@ const UnitTabView = ({location}) => {
      */
     const updatePreview = () => {
         const previewLocation = {
-            
+            ...(unitSummary && {unitSummary}),
+            ...(units && {units})
         };
         const payload = {
+            ...location,
             ...state.previewLocation,
             ...previewLocation
         };
@@ -239,21 +238,29 @@ const UnitTabView = ({location}) => {
         toggleUnitAvailableModal();
     }
     
-        const handleUpdateUnitAvailable = () => {
-            const newUnit = {
-            ...(unitName_available && {unitName: unitName_available}),
-            ...(monthlyRent_available && {monthlyRent: monthlyRent_available}),
-            ...(width_available && {width: width_available}),
-            ...(height_available && {height: height_available}),
-            ...(depth_available && {depth: depth_available}),
-            ...(sqft_available && {squareFeet: sqft_available}),
-            available: true
-            };
+    const handleUpdateUnitAvailable = () => {
+        const newUnit = {
+        ...(unitName_available && {unitName: unitName_available}),
+        ...(monthlyRent_available && {monthlyRent: monthlyRent_available}),
+        ...(width_available && {width: width_available}),
+        ...(height_available && {height: height_available}),
+        ...(depth_available && {depth: depth_available}),
+        ...(sqft_available && {squareFeet: sqft_available}),
+        ...(isAvailable_available && {available: isAvailable_available})
+        };
+        const newUnits = [...units];
+        newUnits.splice(editingIndex_available, 1, newUnit);
+        setUnits(newUnits);
+        toggleUnitAvailableModal();
+    }
+
+    const handleAvailableClick = index => {
+        if (units[index]) {
             const newUnits = [...units];
-            newUnits.splice(editingIndex_available, 1, newUnit);
+            newUnits[index].available = !newUnits[index].available;
             setUnits(newUnits);
-            toggleUnitAvailableModal();
         }
+    }
 
     const handleEditUnitAvailable = (index) => {
         if (units[index]) {
@@ -263,6 +270,7 @@ const UnitTabView = ({location}) => {
             setHeight_available(units[index].height);
             setDepth_available(units[index].depth);
             setSqft_available(units[index].squareFeet);
+            setIsAvailable_available(units[index].available);
             setIsEditing_available(true);
             setEditingIndex_available(index);
             setAvailableModalPage(2);
@@ -299,7 +307,7 @@ const UnitTabView = ({location}) => {
                                 <button type='button' className="btn btn-outline-primary" onClick={toggleUnitSummaryModal}>Add Unit</button>
                             </div>
                             {
-                                unitSummary.length === 0
+                                !unitSummary
                                 ?
                                 <p className="text-secondary pt-5">Currently unit types have been added. Create units with the <b>Add Unit</b> button above.</p>
                                 :
@@ -326,7 +334,7 @@ const UnitTabView = ({location}) => {
                                 <button type='button' className="btn btn-outline-primary" onClick={toggleUnitAvailableModal}>Add Availability</button>
                             </div>
                             {
-                                units.length === 0
+                                !units
                                 ?
                                 <p className="text-secondary pt-5">Currently unit types have been added. Create units with the <b>Add Unit</b> button above.</p>
                                 :
@@ -337,8 +345,10 @@ const UnitTabView = ({location}) => {
                                                 <UnitCard
                                                     unit={unit}
                                                     hideTotal
+                                                    showAvailable
                                                     onEditClick={() => handleEditUnitAvailable(index)}
                                                     onDeleteClick={() => handleDeleteUnitAvailable(index)}
+                                                    onAvailableClick={() => handleAvailableClick(index)}
                                                 />
                                             </div>
                                         ))
@@ -490,6 +500,7 @@ const UnitTabView = ({location}) => {
                                     >
                                         <option value='' selected>Select Unit</option>
                                         {
+                                            unitSummary &&
                                             unitSummary.map((unit, index) => (
                                                 <option key={index} value={JSON.stringify(unit)}>{unit.unitName}</option>
                                             ))
