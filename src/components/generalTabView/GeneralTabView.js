@@ -302,7 +302,7 @@ const GeneralTabView = ({location}) => {
                                 </div>
                             </form>
                             {
-                                !features
+                                !features || (features && features.length === 0)
                                 ?
                                 <p className="text-secondary pt-5">Currently no features. Add features above and view them here...</p>
                                 :

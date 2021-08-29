@@ -61,8 +61,8 @@ const UnitTabView = ({location}) => {
             ...location,
             ...state.previewLocation
         };
-        setUnitSummary((locationWithChanges.unitSummary && locationWithChanges.unitSummary.length > 0) ? locationWithChanges.unitSummary : location.unitSummary);
-        setUnits((locationWithChanges.units && locationWithChanges.units.length > 0) ? locationWithChanges.units : location.units);
+        setUnitSummary(locationWithChanges.unitSummary ? locationWithChanges.unitSummary : '');
+        setUnits(locationWithChanges.units ? locationWithChanges.units : '');
     }, [location]);
 
     const handleFormSubmit = e => {
@@ -307,9 +307,9 @@ const UnitTabView = ({location}) => {
                                 <button type='button' className="btn btn-outline-primary" onClick={toggleUnitSummaryModal}>Add Unit</button>
                             </div>
                             {
-                                !unitSummary
+                                !unitSummary || (unitSummary && unitSummary.length === 0)
                                 ?
-                                <p className="text-secondary pt-5">Currently unit types have been added. Create units with the <b>Add Unit</b> button above.</p>
+                                <p className="text-secondary pt-5">Currently no unit types have been added. Create units with the <b>Add Unit</b> button above.</p>
                                 :
                                 <div className="row">
                                     {
@@ -334,11 +334,12 @@ const UnitTabView = ({location}) => {
                                 <button type='button' className="btn btn-outline-primary" onClick={toggleUnitAvailableModal}>Add Availability</button>
                             </div>
                             {
-                                !units
+                                !units || (units && units.length === 0)
                                 ?
-                                <p className="text-secondary pt-5">Currently unit types have been added. Create units with the <b>Add Unit</b> button above.</p>
+                                <p className="text-secondary pt-5">Currently no available units have been added. Create availabilities with the <b>Add Availability</b> button above.</p>
                                 :
                                 <div className="row">
+                                    <p className='p-4 mt-3 bg-warning rounded-3'><b className='fst-italic'>Note:</b> You can quick change the availability of a unit by clicking the <b className='text-danger'>red</b> or <b className='text-success'>green</b> circular indicators. Setting a unit as <i>Unavailable</i> will remove it from the list of availabilities without deleting the record.</p>
                                     {
                                         units.map((unit, index) => (
                                             <div className='my-2 col-12 col-lg-6 col-xl-4' key={index}>
