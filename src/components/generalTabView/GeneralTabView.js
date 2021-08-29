@@ -61,17 +61,18 @@ const GeneralTabView = ({location}) => {
         }
         else {
             e.preventDefault();
-            // Try to update the item and if the slug is already taken show error message.
             API.updateLocation(state.previewLocation, (res, err) => {
                 if (res && res.status === 200) {
                     console.log('success!');
                 }
                 else if (err) {
+                    if (err.response && err.response.status === 400) {
+                        e.target.elements.namedItem('slug').setCustomValidity('Current value already in use, url slug must be unique. Choose another value.');
+                        setSlugErrorMessage('Current value already in use, url slug must be unique. Choose another value.')
+                    }
                     console.log(err);
                 }
             });
-            // e.target.elements.namedItem('slug').setCustomValidity('Current value already in use, url slug must be unique. Choose another value.');
-            // setSlugErrorMessage('Current value already in use, url slug must be unique. Choose another value.')
         }
         setWasValidated(true);
     }
@@ -226,7 +227,7 @@ const GeneralTabView = ({location}) => {
                             <p>The exact coordinates to display the marker on the map for this location. You can manually enter the <i>latitude</i> and <i>longitude</i> or you can choose the point from the map by selecting <b>Choose From Map</b>.</p>
                             <div className='row align-items-end'>
                                 <div className='d-flex flex-column col-12 col-md-3'>
-                                    <label className='requiredField' htmlFor="lat">Latitude</label>
+                                    <label className='form-label requiredField' htmlFor="lat">Latitude</label>
                                     <input
                                         id='lat'
                                         className='form-control'
@@ -240,7 +241,7 @@ const GeneralTabView = ({location}) => {
                                     />
                                 </div>
                                 <div className='d-flex flex-column col-12 col-md-3 mt-4'>
-                                    <label className='requiredField' htmlFor="log">Longitude</label>
+                                    <label className='form-label requiredField' htmlFor="log">Longitude</label>
                                     <input
                                         id='log'
                                         className='form-control'
