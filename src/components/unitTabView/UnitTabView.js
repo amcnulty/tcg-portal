@@ -13,6 +13,7 @@ const UnitTabView = ({location}) => {
     // location fields
     const [unitSummary, setUnitSummary] = useState();
     const [units, setUnits] = useState();
+    const [extras, setExtras] = useState();
 
     // Fields for unit summary creation modal
     const [unitName_create, setUnitName_create] = useState('');
@@ -32,6 +33,10 @@ const UnitTabView = ({location}) => {
     const [sqft_available, setSqft_available] = useState('');
     const [isAvailable_available, setIsAvailable_available] = useState(true);
 
+    // Fields for extras modal
+    const [price_extra, setPrice_extra] = useState();
+    const [frequency_extra, setFrequency_extra] = useState();
+    const [details_extra, setDetails_extra] = useState();
 
     // form state
     const [wasValidated, setWasValidated] = useState(false);
@@ -47,6 +52,11 @@ const UnitTabView = ({location}) => {
     const [editingIndex_available, setEditingIndex_available] = useState(-1);
     const [availableModalPage, setAvailableModalPage] = useState(1);
     const [existingUnit, setExistingUnit] = useState('');
+
+    // extras state
+    const [extrasModal, setExtrasModal] = useState(false);
+    const [isEditing_extra, setIsEditing_extra] = useState(false);
+    const [editingIndex_extra, setEditingIndex_extra] = useState(-1);
     
 
     /**
@@ -54,7 +64,7 @@ const UnitTabView = ({location}) => {
      */
     useEffect(() => {
         updatePreview();
-    }, [unitSummary, units]);
+    }, [unitSummary, units, extras]);
 
     useEffect(() => {
         const locationWithChanges = {
@@ -63,6 +73,7 @@ const UnitTabView = ({location}) => {
         };
         setUnitSummary(locationWithChanges.unitSummary ? locationWithChanges.unitSummary : '');
         setUnits(locationWithChanges.units ? locationWithChanges.units : '');
+        setExtras(locationWithChanges.extras ? locationWithChanges.extras : '');
     }, [location]);
 
     const handleFormSubmit = e => {
@@ -89,7 +100,8 @@ const UnitTabView = ({location}) => {
     const updatePreview = () => {
         const previewLocation = {
             ...(unitSummary && {unitSummary}),
-            ...(units && {units})
+            ...(units && {units}),
+            ...(extras && {extras})
         };
         const payload = {
             ...location,
@@ -285,6 +297,70 @@ const UnitTabView = ({location}) => {
             setUnits(newUnits);
         }
     }
+  
+    /*
+    *          !!##########################!!
+    *          !!                          !!
+    *          !!          Extras          !!
+    *          !!                          !!
+    *          !!##########################!!
+    */
+
+    const toggleExtrasModal = () => {
+        if (extrasModal) {
+            resetExtrasModal();
+        }
+        setExtrasModal(!extrasModal);
+    }
+
+    const resetExtrasModal = () => {
+        setPrice_extra('');
+        setFrequency_extra('');
+        setDetails_extra('');
+        setIsEditing_extra(false);
+        setEditingIndex_extra(-1);
+    }
+
+    const handleCreateExtra = () => {
+        const newExtra = {
+            ...(price_extra && {price: price_extra}),
+            ...(frequency_extra && {frequency: frequency_extra}),
+            ...(details_extra && {details: details_extra})
+        };
+        setExtras(extras.concat(newExtra));
+        toggleExtrasModal();
+    }
+
+    const handleUpdateExtra = () => {
+        const newExtra = {
+            ...(price_extra && {price: price_extra}),
+            ...(frequency_extra && {frequency: frequency_extra}),
+            ...(details_extra && {details: details_extra})
+        };
+        const newExtras = [...extras];
+        newExtras.splice(editingIndex_extra, 1, newExtra);
+        setExtras(newExtras);
+        toggleExtrasModal();
+    }
+
+    const handleEditExtra = index => {
+        if (extras[index]) {
+            setPrice_extra(extras[index].price);
+            setFrequency_extra(extras[index].frequency);
+            setDetails_extra(extras[index].details);
+            setIsEditing_extra(true);
+            setEditingIndex_extra(index);
+            toggleExtrasModal();
+        }
+    }
+
+    const handleDeleteExtra = index => {
+        if (window.confirm('Are you sure you want to delete this pricing extra?')) {
+            const newExtras = [...extras];
+            newExtras.splice(index, 1);
+            setExtras(newExtras);
+        }
+    }
 
     return (
         <div className='UnitTabView'>
@@ -357,6 +433,53 @@ const UnitTabView = ({location}) => {
                                 </div>
                             }
                         </div>
+                        <h5>Pricing Extras</h5>
+                        <p>Use this section to list extra charges, services, features that are available at this location such as additional storage, key replacements, parking etc.</p>
+                        <div className="d-flex flex-column my-4">
+                            <small className='text-secondary'>Add a pricing extra with the <b>Add Extra</b> button. All pricing extras will be displayed below.</small>
+                            <div>
+                                <button type='button' className="btn btn-outline-primary" onClick={toggleExtrasModal}>Add Extra</button>
+                            </div>
+                            {
+                                !extras || (extras && extras.length === 0)
+                                ?
+                                <p className="text-secondary pt-5">Currently no pricing extras have been added. Create pricing extras with the <b>Add Extra</b> button above.</p>
+                                :
+                                <div className="row">
+                                    {
+                                        extras.map((extra, index) => (
+                                            <div className='my-2 col-12 col-xl-6' key={index}>
+                                                <div className="card">
+                                                    <div className="card-header d-flex flex-row align-items-center p-2 bg-light">
+                                                        <b className='me-auto'>Pricing Extra</b>
+                                                        <button type='button' className="btn btn-link text-secondary" onClick={() => handleEditExtra(index)}>
+                                                            <i className="fas fa-pencil-alt"></i>
+                                                        </button>
+                                                        <button type='button' className="btn btn-link text-danger" onClick={() => handleDeleteExtra(index)}>
+                                                            <i className="fas fa-trash-alt"></i>
+                                                        </button>
+                                                    </div>
+                                                    <div className="card-body row">
+                                                        <div className="col-12 col-sm-6">
+                                                            <label className='fw-bold text-secondary'>Price:</label>
+                                                            <span className="ms-3">{extra.price ? `$${extra.price}` : '-'}</span>
+                                                        </div>
+                                                        <div className="col-12 col-sm-6">
+                                                            <label className='fw-bold text-secondary'>Frequency:</label>
+                                                            <span className="ms-3">{extra.frequency ? `${extra.frequency}` : '-'}</span>
+                                                        </div>
+                                                        <div className="col-12">
+                                                            <label className='fw-bold text-secondary'>Details:</label>
+                                                            <span className="ms-3">{extra.details ? extra.details : '-'}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    }
+                                </div>
+                            }
+                        </div>
                     </form>
                 </div>
             </TabView>
@@ -379,6 +502,7 @@ const UnitTabView = ({location}) => {
                                 id='unitName'
                                 className='form-control'
                                 type="text"
+                                placeholder='Enter Unit Name'
                                 value={unitName_create}
                                 onChange={e => setUnitName_create(e.target.value)}
                             />
@@ -391,6 +515,7 @@ const UnitTabView = ({location}) => {
                                     id='monthlyRent'
                                     className='form-control'
                                     type="Number"
+                                    placeholder='Enter Monthly Rent'
                                     min={0}
                                     step='.01'
                                     value={monthlyRent_create}
@@ -407,6 +532,7 @@ const UnitTabView = ({location}) => {
                                 id="width"
                                 className="form-control"
                                 type='Number'
+                                placeholder='Enter Width'
                                 min={0}
                                 value={width_create}
                                 onChange={e => setWidth_create(e.target.value)}
@@ -418,6 +544,7 @@ const UnitTabView = ({location}) => {
                                 id="height"
                                 className="form-control"
                                 type='text'
+                                placeholder='Enter Height'
                                 value={height_create}
                                 onChange={e => setHeight_create(e.target.value)}
                             />
@@ -431,6 +558,7 @@ const UnitTabView = ({location}) => {
                                 id='depth'
                                 className="form-control"
                                 type="Number"
+                                placeholder='Enter Depth'
                                 min={0}
                                 value={depth_create}
                                 onChange={e => setDepth_create(e.target.value)}
@@ -443,6 +571,7 @@ const UnitTabView = ({location}) => {
                                 id='sqft'
                                 className="form-control"
                                 type="Number"
+                                placeholder='Enter Square Feet'
                                 min={0}
                                 value={sqft_create}
                                 onChange={e => setSqft_create(e.target.value)}
@@ -457,6 +586,7 @@ const UnitTabView = ({location}) => {
                                 id='numberOfUnits'
                                 className="form-control"
                                 type="Number"
+                                placeholder='Enter # Of Units'
                                 min={0}
                                 value={numberOfUnits_create}
                                 onChange={e => setNumberOfUnits_create(e.target.value)}
@@ -536,6 +666,7 @@ const UnitTabView = ({location}) => {
                                         id='unitName'
                                         className='form-control'
                                         type="text"
+                                        placeholder='Enter Unit Name'
                                         value={unitName_available}
                                         onChange={e => setUnitName_available(e.target.value)}
                                     />
@@ -548,6 +679,7 @@ const UnitTabView = ({location}) => {
                                             id='monthlyRent'
                                             className='form-control'
                                             type="Number"
+                                            placeholder='Enter Monthly Rent'
                                             min={0}
                                             step='.01'
                                             value={monthlyRent_available}
@@ -564,6 +696,7 @@ const UnitTabView = ({location}) => {
                                         id="width"
                                         className="form-control"
                                         type='Number'
+                                        placeholder="Enter Width"
                                         min={0}
                                         value={width_available}
                                         onChange={e => setWidth_available(e.target.value)}
@@ -575,6 +708,7 @@ const UnitTabView = ({location}) => {
                                         id="height"
                                         className="form-control"
                                         type='text'
+                                        placeholder='Enter Height'
                                         value={height_available}
                                         onChange={e => setHeight_available(e.target.value)}
                                     />
@@ -588,6 +722,7 @@ const UnitTabView = ({location}) => {
                                         id='depth'
                                         className="form-control"
                                         type="Number"
+                                        placeholder='Enter Depth'
                                         min={0}
                                         value={depth_available}
                                         onChange={e => setDepth_available(e.target.value)}
@@ -600,6 +735,7 @@ const UnitTabView = ({location}) => {
                                         id='sqft'
                                         className="form-control"
                                         type="Number"
+                                        placeholder='Enter Square Feet'
                                         min={0}
                                         value={sqft_available}
                                         onChange={e => setSqft_available(e.target.value)}
@@ -618,6 +754,77 @@ const UnitTabView = ({location}) => {
                         <button className="btn btn-primary" onClick={handleUpdateUnitAvailable}>Update</button>
                         :
                         <button className="btn btn-primary" onClick={handleAddUnitAvailable}>Add</button>)
+                    }
+                </ModalFooter>
+            </Modal>
+            <Modal isOpen={extrasModal} toggle={toggleExtrasModal} size='lg' centered>
+                <ModalHeader>
+                    {
+                        isEditing_extra
+                        ?
+                        'Editing Extra'
+                        :
+                        'Create A New Pricing Extra'
+                    }
+                </ModalHeader>
+                <ModalBody>
+                    <>
+                        <div className="row my-3 align-items-end">
+                            <div className="col-12 col-lg-6">
+                                <label className='form-label' htmlFor="price">Price</label>
+                                <small className='text-secondary d-block'>The price / cost of this extra.</small>
+                                <div className="input-group">
+                                    <span className='input-group-text'>$</span>
+                                    <input
+                                        id='price'
+                                        className='form-control'
+                                        type="Number"
+                                        placeholder='Enter Price'
+                                        min={0}
+                                        step='.01'
+                                        value={price_extra}
+                                        onChange={e => setPrice_extra(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                            <div className="col-12 col-lg-6">
+                                <label htmlFor="frequency" className="form-label">Pricing Frequency</label>
+                                <small className='text-secondary d-block'>How often the charge is due.</small>
+                                <small className='text-secondary'>Example: monthly, yearly, one time etc.</small>
+                                <input
+                                    id='frequency'
+                                    className='form-control'
+                                    type="text"
+                                    placeholder='Enter Pricing Frequency'
+                                    value={frequency_extra}
+                                    onChange={e => setFrequency_extra(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                        <div className="row my-3 align-items-end">
+                            <div className="col-12">
+                                <label htmlFor="details" className="form-label">Details</label>
+                                <small className='text-secondary d-block'>Explain what this charge is and the details associated with it.</small>
+                                <textarea
+                                    id="details"
+                                    className='form-control'
+                                    rows="4"
+                                    placeholder='Enter Details'
+                                    value={details_extra}
+                                    onChange={e => setDetails_extra(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                    </>
+                </ModalBody>
+                <ModalFooter>
+                    <button className="btn" onClick={toggleExtrasModal}>CANCEL</button>
+                    {
+                        isEditing_extra
+                        ?
+                        <button className="btn btn-primary" onClick={handleUpdateExtra}>Update</button>
+                        :
+                        <button className="btn btn-primary" onClick={handleCreateExtra}>Create</button>
                     }
                 </ModalFooter>
             </Modal>
