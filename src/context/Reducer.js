@@ -1,9 +1,11 @@
-import { OPEN_PREVIEW, RESET_PREVIEW, SET_TABVIEW, SET_USER, UPDATE_PREVIEW } from "./ActionTypes"
+import { DELETE_USER, OPEN_PREVIEW, RESET_PREVIEW, SET_TABVIEW, SET_USER, UPDATE_PREVIEW } from "./ActionTypes"
 
 const Reducer = (state, action) => {
     switch (action.type) {
         case SET_USER:
             return {...state, currentUser: action.payload};
+        case DELETE_USER:
+            return {...state, currentUser: null};
         case SET_TABVIEW:
             return {...state, tabView: action.payload};
         case UPDATE_PREVIEW:

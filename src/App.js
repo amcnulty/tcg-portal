@@ -46,7 +46,7 @@ function App() {
             <Route
               path='/'
               render={props => (
-                props.location.pathname !== '/' &&
+                props.location.pathname !== '/login' &&
                 <>
                   <div className="d-none d-md-block col-2 p-0">
                     <Toolbar/>
@@ -57,11 +57,16 @@ function App() {
                 </>
               )}
             />
-            <div id='mainContent' className="col-md-10 mainContent">
+            <div id='mainContent' className="col mainContent">
                 <ScrollToTop/>
                 <Switch>
                   <Route
                     path='/'
+                    exact
+                    render={props => <Redirect to='/dashboard'/>}
+                  />
+                  <Route
+                    path='/login'
                     exact
                     component={Login}
                   />

@@ -18,7 +18,7 @@ const PrivateRoute = ({ children, ...rest }) => {
                 }
                 else {
                     setRenderChildren(<Redirect to={{
-                        pathname: '/',
+                        pathname: '/login',
                         state: { from: location }
                     }}/>);
                 }

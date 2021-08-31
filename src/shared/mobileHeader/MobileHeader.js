@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { Link, useHistory, useLocation } from 'react-router-dom';
 import { Collapse, DropdownItem, Nav, Navbar, NavbarBrand, NavbarToggler, NavItem, NavLink } from 'reactstrap';
 import CompanyLogo from '../../components/companyLogo/CompanyLogo';
+import { DELETE_USER } from '../../context/ActionTypes';
+import { AppContext } from '../../context/Store';
 import { API } from '../../util/API';
 import './MobileHeader.sass';
 
@@ -9,10 +11,12 @@ const MobileHeader = () => {
     const [isOpen, setIsOpen] = useState(false);
     const location = useLocation();
     const history = useHistory();
+    const [state, dispatch] = useContext(AppContext);
     
     const handleLogout = () => {
         API.logOut((res, err) => {
             if (res && res.status === 200) {
+                dispatch({type: DELETE_USER});
                 history.push('/');
             }
         });

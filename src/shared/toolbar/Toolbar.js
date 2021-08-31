@@ -5,7 +5,7 @@ import { API } from '../../util/API';
 import { AppContext } from '../../context/Store';
 import './Toolbar.sass';
 import { TAB_GENERAL, TAB_MEDIA, TAB_PAYMENT, TAB_THUMBNAIL, TAB_UNIT } from '../Constants';
-import { SET_TABVIEW } from '../../context/ActionTypes';
+import { DELETE_USER, SET_TABVIEW } from '../../context/ActionTypes';
 import { HELPERS } from '../../util/helpers';
 
 const Toolbar = () => {
@@ -16,7 +16,8 @@ const Toolbar = () => {
     const handleLogout = () => {
         API.logOut((res, err) => {
             if (res && res.status === 200) {
-                history.push('/');
+                dispatch({type: DELETE_USER});
+                history.push('/login');
             }
         });
     }

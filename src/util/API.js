@@ -61,7 +61,7 @@ export const API = {
      * @param {Function} cb Callback function that returns response or error of the server request.
      */
     isLoggedIn(cb) {
-        GET('/api/user/is-logged-in', cb);
+        GET('/api/user/is-logged-in', cb, null, true);
     },
     /**
      * Logs a user in and creates a session.
@@ -90,7 +90,7 @@ export const API = {
     *          !!##########################!!
     */
    getLocations: (cb) => {
-       GET('/portal/locations', cb);
+       GET('/portal/locations', cb, null, true);
     },
     /**
      * Gets location data for a specific location for the given Id.
