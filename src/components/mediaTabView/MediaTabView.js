@@ -7,7 +7,7 @@ import './MediaTabView.sass';
 import Compress from 'compress.js';
 import { API } from '../../util/API';
 import { AppContext } from '../../context/Store';
-import { UPDATE_PREVIEW } from '../../context/ActionTypes';
+import { SET_BANNER_IMAGE_PENDING, SET_DETAIL_PAGE_IMAGES_PENDING, UPDATE_PREVIEW } from '../../context/ActionTypes';
 import ImageCard from '../imageCard/ImageCard';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 
@@ -18,14 +18,10 @@ const MediaTabView = ({location}) => {
     const [bannerImage, setBannerImage] = useState();
 
     // State for new image object being created before it is uploaded
-    const [detailPageImages_pending, setDetailPageImages_pending] = useState();
     const [currentImage, setCurrentImage] = useState();
     const [currentCaption, setCurrentCaption] = useState();
     const [isEditing_pending, setIsEditing_pending] = useState(false);
     const [editingIndex_pending, setEditingIndex_pending] = useState(-1);
-
-    // State for new banner image being created before it is uploaded
-    const [bannerImage_pending, setBannerImage_pending] = useState();
 
     // Modal state
     const [captionModal, setCaptionModal] = useState(false);
@@ -47,25 +43,83 @@ const MediaTabView = ({location}) => {
             ...state.previewLocation
         };
         setDetailPageImages(locationWithChanges.detailPageImages ? locationWithChanges.detailPageImages : '');
-        setBannerImage(locationWithChanges.bannerImage ? locationWithChanges.bannerImage : '');
+        setBannerImage(locationWithChanges.bannerImage ? locationWithChanges.bannerImage : undefined);
     }, [location]);
     
     const handleFormSubmit = e => {
-        // if (!e.target.checkValidity()) {
-        //     e.preventDefault();
-        //     e.stopPropagation();
-        // }
-        // else {
-            e.preventDefault();
-            API.updateLocation(state.previewLocation, (res, err) => {
-                if (res && res.status === 200) {
-                    console.log('success!');
+        e.preventDefault();
+        // First update the location data.
+        // The server will be responsible for deleting any images that are no longer in the new request.
+        API.updateLocation_hideToast({...state.previewLocation, ...(state.previewLocation.bannerImage ?? {bannerImage: null}), _id: state.previewLocation._id}, (res, err) => {
+            if (res && res.status === 200) {
+                // Once location is saved if there are pending images upload to cloudinary.
+                if (state.bannerImage_pending || state.detailPageImages_pending) {
+                    const files = [];
+                    const locationImageRequest = {_id: location._id};
+                    if (state.bannerImage_pending && state.bannerImage_pending.file) {
+                        files.push(state.bannerImage_pending.file);
+                        locationImageRequest.bannerImage = {
+                            src: '',
+                            alt: location.name + ' banner image'
+                        };
+                    }
+                    if (state.detailPageImages_pending) {
+                        locationImageRequest.detailPageImages = [];
+                        for (let i = 0; i < state.detailPageImages_pending.length; i++) {
+                            files.push(state.detailPageImages_pending[i].file);
+                            locationImageRequest.detailPageImages.push({
+                                src: '',
+                                thumbnail: '',
+                                alt: state.detailPageImages_pending[i].alt
+                            });
+                        }
+                    }
+                    API.uploadImages(files, (res, err) => {
+                        if (res) {
+                            // After images have been uploaded to cloudinary update the location record with the new images.
+                            if (locationImageRequest.bannerImage) {
+                                locationImageRequest.bannerImage.src = res[0].data.secure_url;
+                                res.shift();
+                            }
+                            if (locationImageRequest.detailPageImages) {
+                                for (let i = 0; i < res.length; i++) {
+                                    locationImageRequest.detailPageImages[i].src = res[i].data.secure_url;
+                                    locationImageRequest.detailPageImages[i].thumbnail = res[i].data.secure_url;
+                                }
+                                locationImageRequest.detailPageImages = locationImageRequest.detailPageImages.concat(detailPageImages);
+                            }
+                            API.updateLocation(locationImageRequest, (res, err) => {
+                                if (res && res.status === 200) {
+                                    console.log('success');
+                                    // Update the bannerImage object and the detailPageImages object with the new images.
+                                    // Reset the bannerImage_pending and detailPageImages_pending context variables
+                                    if (locationImageRequest.bannerImage) {
+                                        setBannerImage(locationImageRequest.bannerImage);
+                                        dispatch({type: SET_BANNER_IMAGE_PENDING, payload: undefined});
+                                    }
+                                    if (locationImageRequest.detailPageImages) {
+                                        setDetailPageImages(locationImageRequest.detailPageImages);
+                                        dispatch({type: SET_DETAIL_PAGE_IMAGES_PENDING, payload: undefined});
+                                    }
+                                }
+                                else if (err) {
+                                    console.log(err);
+                                }
+                            });
+                        }
+                        else if (err) {
+                            console.log(err);
+                        }
+                    });
                 }
-                else if (err) {
-                    console.log(err);
+                else {
+                    HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Update Successful!');
                 }
-            });
-        // }
+            }
+            else if (err) {
+                console.log(err);
+            }
+        });
     }
     /**
      * Updates the preview in context so when it is time to show the preview data from this tab will be included.
@@ -73,7 +127,7 @@ const MediaTabView = ({location}) => {
     const updatePreview = () => {
         const previewLocation = {
             ...(detailPageImages) && {detailPageImages},
-            ...(bannerImage) && {bannerImage}
+            bannerImage
         };
         const payload = {
             ...location,
@@ -149,7 +203,7 @@ const MediaTabView = ({location}) => {
             ...(currentImage && {file: currentImage}),
             ...(currentImage && {src: URL.createObjectURL(currentImage)})
         };
-        setBannerImage_pending(newBannerImage);
+        dispatch({type: SET_BANNER_IMAGE_PENDING, payload: newBannerImage});
         toggleCaptionModal();
     }
 
@@ -162,6 +216,7 @@ const MediaTabView = ({location}) => {
             setCurrentCaption(detailPageImages[index].alt);
             setIsEditing(true);
             setEditingIndex(index);
+            setCaptionModalPage(2);
             toggleCaptionModal();
         }
     }
@@ -176,7 +231,7 @@ const MediaTabView = ({location}) => {
 
     const handleBanner_pendingDelete = () => {
         if (window.confirm('Are you sure you want to delete this banner image?')) {
-            setBannerImage_pending();
+            dispatch({type: SET_BANNER_IMAGE_PENDING, payload: undefined});
         }
     }
 
@@ -195,12 +250,12 @@ const MediaTabView = ({location}) => {
         else if (isEditing_pending) {
             const newDetailPageImage = {
                 ...(currentCaption && {alt: currentCaption}),
-                ...(detailPageImages_pending[editingIndex_pending].src && {src: detailPageImages_pending[editingIndex_pending].src}),
-                ...(detailPageImages_pending[editingIndex_pending].file && {file: detailPageImages_pending[editingIndex_pending].file})
+                ...(state.detailPageImages_pending[editingIndex_pending].src && {src: state.detailPageImages_pending[editingIndex_pending].src}),
+                ...(state.detailPageImages_pending[editingIndex_pending].file && {file: state.detailPageImages_pending[editingIndex_pending].file})
             };
-            const newDetailPageImages_pending = [...detailPageImages_pending];
+            const newDetailPageImages_pending = [...state.detailPageImages_pending];
             newDetailPageImages_pending.splice(editingIndex_pending, 1, newDetailPageImage);
-            setDetailPageImages_pending(newDetailPageImages_pending);
+            dispatch({type: SET_DETAIL_PAGE_IMAGES_PENDING, payload: newDetailPageImages_pending});
             toggleCaptionModal();
         }
     }
@@ -212,17 +267,17 @@ const MediaTabView = ({location}) => {
             ...(currentImage && {src: URL.createObjectURL(currentImage)})
         };
         let newDetailPageImages_pending = [];
-        if (detailPageImages_pending) {
-            newDetailPageImages_pending = [...detailPageImages_pending];
+        if (state.detailPageImages_pending) {
+            newDetailPageImages_pending = [...state.detailPageImages_pending];
         }
         newDetailPageImages_pending.push(newDetailPageImage);
-        setDetailPageImages_pending(newDetailPageImages_pending);
+        dispatch({type: SET_DETAIL_PAGE_IMAGES_PENDING, payload: newDetailPageImages_pending});
         toggleCaptionModal();
     }
 
     const handlePendingEdit = index => {
-        if (detailPageImages_pending[index]) {
-            setCurrentCaption(detailPageImages_pending[index].alt);
+        if (state.detailPageImages_pending[index]) {
+            setCurrentCaption(state.detailPageImages_pending[index].alt);
             setIsEditing_pending(true);
             setEditingIndex_pending(index);
             setCaptionModalPage(2);
@@ -232,9 +287,9 @@ const MediaTabView = ({location}) => {
 
     const handlePendingDelete = index => {
         if (window.confirm('Are you sure you want to delete this image?')) {
-            const newDetailPageImages_pending = [...detailPageImages_pending];
+            const newDetailPageImages_pending = [...state.detailPageImages_pending];
             newDetailPageImages_pending.splice(index, 1);
-            setDetailPageImages_pending(newDetailPageImages_pending);
+            dispatch({type: SET_DETAIL_PAGE_IMAGES_PENDING, payload: newDetailPageImages_pending});
         }
     }
 
@@ -261,16 +316,16 @@ const MediaTabView = ({location}) => {
                             </div>
                         </div>
                         {
-                            (detailPageImages_pending && detailPageImages_pending.length > 0 || bannerImage_pending) &&
+                            (state.detailPageImages_pending && state.detailPageImages_pending.length > 0 || state.bannerImage_pending) &&
                             <>
                                 <h5 className="mt-5">Images Pending Save</h5>
-                                <p>The following images will be uploaded once the location is saved with the <b>Save</b> button below.</p>
+                                <p>The following images will be uploaded once the location is saved with the <b>Save</b> button below. Banner images uploaded here will replace any existing banner image shown below.</p>
                                 <div className="row">
                                     {
-                                        bannerImage_pending &&
+                                        state.bannerImage_pending &&
                                         <div className="col-12 mb-4">
                                             <ImageCard
-                                                src={bannerImage_pending.src}
+                                                src={state.bannerImage_pending.src}
                                                 caption='Banner'
                                                 hideEdit
                                                 onDelete={handleBanner_pendingDelete}
@@ -278,7 +333,7 @@ const MediaTabView = ({location}) => {
                                         </div>
                                     }
                                     {
-                                        detailPageImages_pending && detailPageImages_pending.map((image, index) => (
+                                        state.detailPageImages_pending && state.detailPageImages_pending.map((image, index) => (
                                             <div className="col-12 col-lg-6 mb-4" key={index}>
                                                 <ImageCard
                                                     src={image.src}
@@ -293,7 +348,7 @@ const MediaTabView = ({location}) => {
                             </>
                         }
                         <h5 className='mt-5'>Banner Image</h5>
-                        <p>An optional banner image can be shown at the top of the page for each location.</p>
+                        <p>An optional banner image can be shown at the top of the page for each location. To change this image use the upload tool above and select <b>Banner Image</b> after uploading image. This new image will replace the current banner image once the location is saved.</p>
                         {
                             bannerImage
                             ?

@@ -6,7 +6,9 @@ const initialState = {
     currentUser: null,
     tabView: TAB_GENERAL,
     previewLocation: {},
-    openPreview: false
+    openPreview: false,
+    detailPageImages_pending: undefined,
+    bannerImage_pending: undefined
 }
 
 const Store = (props) => {

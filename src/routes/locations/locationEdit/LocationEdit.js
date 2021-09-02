@@ -5,7 +5,7 @@ import MediaTabView from '../../../components/mediaTabView/MediaTabView';
 import PaymentTabView from '../../../components/paymentTabView/PaymentTabView';
 import ThumbnailTabView from '../../../components/thumbnailTabView/ThumbnailTabView';
 import UnitTabView from '../../../components/unitTabView/UnitTabView';
-import { SET_TABVIEW, UPDATE_PREVIEW } from '../../../context/ActionTypes';
+import { SET_BANNER_IMAGE_PENDING, SET_DETAIL_PAGE_IMAGES_PENDING, SET_TABVIEW, UPDATE_PREVIEW } from '../../../context/ActionTypes';
 import { AppContext } from '../../../context/Store';
 import { TAB_GENERAL, TAB_MEDIA, TAB_PAYMENT, TAB_THUMBNAIL, TAB_UNIT } from '../../../shared/Constants';
 import { API } from '../../../util/API';
@@ -30,9 +30,11 @@ const LocationEdit = () => {
             }
         });
         return () => {
-            // reset the preview to empty so the data doesn't cross with other locatios that get opened.
+            // reset the preview to empty so the data doesn't cross with other locations that get opened.
             setTimeout(() => {
                 dispatch({type: UPDATE_PREVIEW, payload: {}});
+                dispatch({type: SET_DETAIL_PAGE_IMAGES_PENDING, payload: undefined});
+                dispatch({type: SET_BANNER_IMAGE_PENDING, payload: undefined});
             }, 1000);
             dispatch({type: SET_TABVIEW, payload: TAB_GENERAL});
         }
