@@ -154,18 +154,6 @@ const MediaTabView = ({location}) => {
 
                 // Open caption modal
                 toggleCaptionModal();
-
-
-
-                // API.uploadImage(resizedFile, (res, err) => {
-                //     if (res && res.status === 200) {
-                //         console.log('res :>> ', res);
-                //     }
-                //     else {
-                //         console.log('err :>> ', err);
-                //         console.log('err.response :>> ', err.response);
-                //     }
-                // })
             })
         }
     }, []);

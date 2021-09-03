@@ -8,7 +8,8 @@ const initialState = {
     previewLocation: {},
     openPreview: false,
     detailPageImages_pending: undefined,
-    bannerImage_pending: undefined
+    bannerImage_pending: undefined,
+    thumbnailImage_pending: undefined
 }
 
 const Store = (props) => {
