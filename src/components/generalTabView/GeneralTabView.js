@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
+import { useHistory } from 'react-router-dom';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 import { UPDATE_PREVIEW } from '../../context/ActionTypes';
 import { AppContext } from '../../context/Store';
@@ -10,6 +11,7 @@ import TabView from '../tabView/TabView';
 
 const GeneralTabView = ({location}) => {
     const [state, dispatch] = useContext(AppContext);
+    const history = useHistory();
 
     const [name, setName] = useState('');
     const [slug, setSlug] = useState('');
@@ -64,26 +66,44 @@ const GeneralTabView = ({location}) => {
         }
         else {
             e.preventDefault();
-            const updateRequest = publish ? { ...state.previewLocation, isPublished: true, isDraft: false } : state.previewLocation;
-            API.updateLocation_hideToast(updateRequest, (res, err) => {
-                if (res && res.status === 200) {
-                    console.log('success!');
-                    if (publish) {
-                        setIsPublished(true);
-                        HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Location Published!');
+            if (state.previewLocation._id) {
+                const updateRequest = publish ? { ...state.previewLocation, isPublished: true, isDraft: false } : state.previewLocation;
+                API.updateLocation_hideToast(updateRequest, (res, err) => {
+                    if (res && res.status === 200) {
+                        console.log('success!');
+                        if (publish) {
+                            setIsPublished(true);
+                            HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Location Published!');
+                        }
+                        else {
+                            HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Update Successful!');
+                        }
                     }
-                    else {
-                        HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Update Successful!');
+                    else if (err) {
+                        if (err.response && err.response.status === 400) {
+                            e.target.elements.namedItem('slug').setCustomValidity('Current value already in use, url slug must be unique. Choose another value.');
+                            setSlugErrorMessage('Current value already in use, url slug must be unique. Choose another value.')
+                        }
+                        console.log(err);
                     }
-                }
-                else if (err) {
-                    if (err.response && err.response.status === 400) {
-                        e.target.elements.namedItem('slug').setCustomValidity('Current value already in use, url slug must be unique. Choose another value.');
-                        setSlugErrorMessage('Current value already in use, url slug must be unique. Choose another value.')
+                });
+            }
+            else {
+                API.createLocation(state.previewLocation, (res, err) => {
+                    if (res && res.status === 200) {
+                        console.log('success!');
+                        dispatch({type: UPDATE_PREVIEW, payload: res.data});
+                        history.push(`/location/${res.data._id}`);
                     }
-                    console.log(err);
-                }
-            });
+                    else if (err) {
+                        if (err.response && err.response.status === 400) {
+                            e.target.elements.namedItem('slug').setCustomValidity('Current value already in use, url slug must be unique. Choose another value.');
+                            setSlugErrorMessage('Current value already in use, url slug must be unique. Choose another value.')
+                        }
+                        console.log(err);
+                    }
+                })
+            }
         }
         setWasValidated(true);
     }

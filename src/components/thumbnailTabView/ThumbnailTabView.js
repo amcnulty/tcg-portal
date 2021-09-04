@@ -8,9 +8,11 @@ import { UPDATE_PREVIEW, SET_THUMBNAIL_IMAGE_PENDING } from '../../context/Actio
 import { HELPERS, TOAST_TYPES } from '../../util/helpers';
 import './ThumbnailTabView.sass';
 import { API } from '../../util/API';
+import { useHistory } from 'react-router-dom';
 
 const ThumbnailTabView = ({location}) => {
     const [state, dispatch] = useContext(AppContext);
+    const history = useHistory();
 
     const [thumbnailImage, setThumbnailImage] = useState();
     const [isPublished, setIsPublished] = useState();
@@ -34,60 +36,107 @@ const ThumbnailTabView = ({location}) => {
 
     const handleFormSubmit = (e, publish) => {
         e.preventDefault();
-        const updateRequest = publish
-        ?
-        {...state.previewLocation, ...(state.previewLocation.thumbnailImage ?? {thumbnailImage: null}), _id: state.previewLocation._id, isPublished: true, isDraft: false}
-        :
-        {...state.previewLocation, ...(state.previewLocation.thumbnailImage ?? {thumbnailImage: null}), _id: state.previewLocation._id}
-        API.updateLocation_hideToast(updateRequest, (res, err) => {
-            if (res && res.status === 200) {
-                if (state.thumbnailImage_pending) {
-                    API.uploadImages([state.thumbnailImage_pending.file], (res, err) => {
-                        if (res) {
-                            const locationImageRequest = {
-                                _id: location._id,
-                                thumbnailImage: {
-                                    src: res[0].data.secure_url,
-                                    alt: location.name
+        if (state.previewLocation._id) {
+            const updateRequest = publish
+            ?
+            {...state.previewLocation, ...(state.previewLocation.thumbnailImage ?? {thumbnailImage: null}), _id: state.previewLocation._id, isPublished: true, isDraft: false}
+            :
+            {...state.previewLocation, ...(state.previewLocation.thumbnailImage ?? {thumbnailImage: null}), _id: state.previewLocation._id}
+            API.updateLocation_hideToast(updateRequest, (res, err) => {
+                if (res && res.status === 200) {
+                    if (state.thumbnailImage_pending) {
+                        API.uploadImages([state.thumbnailImage_pending.file], (res, err) => {
+                            if (res) {
+                                const locationImageRequest = {
+                                    _id: state.previewLocation._id,
+                                    thumbnailImage: {
+                                        src: res[0].data.secure_url,
+                                        alt: state.previewLocation.name
+                                    }
                                 }
+                                API.updateLocation_hideToast(locationImageRequest, (res, err) => {
+                                    if (res && res.status === 200) {
+                                        console.log('Thumbnail Upload Success!');
+                                        if (publish) {
+                                            setIsPublished(true);
+                                            HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Location Published!');
+                                        }
+                                        else {
+                                            HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Update Successful!');
+                                        }
+                                        setThumbnailImage(locationImageRequest.thumbnailImage);
+                                        dispatch({type: SET_THUMBNAIL_IMAGE_PENDING, payload: undefined});
+                                    }
+                                    else if (err) {
+                                        console.log(err);
+                                    }
+                                });
                             }
-                            API.updateLocation_hideToast(locationImageRequest, (res, err) => {
-                                if (res && res.status === 200) {
-                                    console.log('Thumbnail Upload Success!');
-                                    if (publish) {
-                                        setIsPublished(true);
-                                        HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Location Published!');
-                                    }
-                                    else {
-                                        HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Update Successful!');
-                                    }
-                                    setThumbnailImage(locationImageRequest.thumbnailImage);
-                                    dispatch({type: SET_THUMBNAIL_IMAGE_PENDING, payload: undefined});
-                                }
-                                else if (err) {
-                                    console.log(err);
-                                }
-                            });
+                            else if (err) {
+                                console.log(err);
+                            }
+                        });
+                    }
+                    else {
+                        if (publish) {
+                            setIsPublished(true);
+                            HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Location Published!');
                         }
-                        else if (err) {
-                            console.log(err);
+                        else {
+                            HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Update Successful!');
                         }
-                    });
+                    }
                 }
-                else {
-                    if (publish) {
-                        setIsPublished(true);
-                        HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Location Published!');
+                else if (err) {
+                    console.log(err);
+                }
+            });
+        }
+        else {
+            API.createLocation(state.previewLocation, (res, err) => {
+                if (res && res.status === 200) {
+                    console.log(res.data);
+                    const idField = res.data._id;
+                    if (state.thumbnailImage_pending) {
+                        API.uploadImages([state.thumbnailImage_pending.file], (res, err) => {
+                            if (res) {
+                                const locationImageRequest = {
+                                    _id: idField,
+                                    thumbnailImage: {
+                                        src: res[0].data.secure_url,
+                                        alt: state.previewLocation.name
+                                    }
+                                }
+                                API.updateLocation_hideToast(locationImageRequest, (res, err) => {
+                                    if (res && res.status === 200) {
+                                        console.log('Thumbnail Upload Success!');
+                                        HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Update Successful!');
+                                        setThumbnailImage(locationImageRequest.thumbnailImage);
+                                        dispatch({type: SET_THUMBNAIL_IMAGE_PENDING, payload: undefined});
+                                        dispatch({type: UPDATE_PREVIEW, payload: res.data});
+                                        history.push(`/location/${res.data._id}`);
+                                    }
+                                    else if (err) {
+                                        console.log(err);
+                                    }
+                                });
+                            }
+                            else if (err) {
+                                console.log(err);
+                            }
+                        });
                     }
                     else {
                         HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Update Successful!');
+                        dispatch({type: UPDATE_PREVIEW, payload: res.data});
+                        history.push(`/location/${res.data._id}`);
                     }
                 }
-            }
-            else if (err) {
-                console.log(err);
-            }
-        });
+                else if (err) {
+                    console.log(err);
+                }
+            });
+        }
     }
 
     const handlePublish = (e) => {
@@ -126,7 +175,7 @@ const ThumbnailTabView = ({location}) => {
                 dispatch({type: SET_THUMBNAIL_IMAGE_PENDING, payload: {
                         file: resizedFile,
                         src: URL.createObjectURL(resizedFile),
-                        alt: location.name
+                        alt: state.previewLocation.name
                     }
                 });
             })

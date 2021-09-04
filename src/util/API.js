@@ -101,6 +101,14 @@ export const API = {
         GET(`/portal/location/${id}`, cb);
     },
     /**
+     * Creates a location with the given payload. Make sure payload is in the form of the location record.
+     * @param {Object} data Request payload for creating a location
+     * @param {Function} cb Callback function that returns response or error of the server request.
+     */
+    createLocation: (data, cb) => {
+        POST('/portal/location', data, cb, {type: TOAST_TYPES.SUCCESS, message: 'Location Created!'});
+    },
+    /**
     * Updates a location with the given payload. Make sure payload is in the form of the location record.
     * @param {Object} data Request payload for updating a location.
     * @param {Function} cb Callback function that returns response or error of the server request.

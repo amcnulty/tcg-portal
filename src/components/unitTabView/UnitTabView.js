@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
+import { useHistory } from 'react-router-dom';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 import { UPDATE_PREVIEW } from '../../context/ActionTypes';
 import { AppContext } from '../../context/Store';
@@ -10,6 +11,7 @@ import UnitCard from '../unitCard/UnitCard';
 
 const UnitTabView = ({location}) => {
     const [state, dispatch] = useContext(AppContext);
+    const history = useHistory();
 
     // location fields
     const [unitSummary, setUnitSummary] = useState();
@@ -86,22 +88,36 @@ const UnitTabView = ({location}) => {
         }
         else {
             e.preventDefault();
-            const updateRequest = publish ? { ...state.previewLocation, isPublished: true, isDraft: false } : state.previewLocation;
-            API.updateLocation_hideToast(updateRequest, (res, err) => {
-                if (res && res.status === 200) {
-                    console.log('success!');
-                    if (publish) {
-                        setIsPublished(true);
-                        HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Location Published!');
+            if (state.previewLocation._id) {
+                const updateRequest = publish ? { ...state.previewLocation, isPublished: true, isDraft: false } : state.previewLocation;
+                API.updateLocation_hideToast(updateRequest, (res, err) => {
+                    if (res && res.status === 200) {
+                        console.log('success!');
+                        if (publish) {
+                            setIsPublished(true);
+                            HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Location Published!');
+                        }
+                        else {
+                            HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Update Successful!');
+                        }
                     }
-                    else {
-                        HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Update Successful!');
+                    else if (err) {
+                        console.log(err);
                     }
-                }
-                else if (err) {
-                    console.log(err);
-                }
-            });
+                });
+            }
+            else {
+                API.createLocation(state.previewLocation, (res, err) => {
+                    if (res && res.status === 200) {
+                        console.log('success!');
+                        dispatch({type: UPDATE_PREVIEW, payload: res.data});
+                        history.push(`/location/${res.data._id}`);
+                    }
+                    else if (err) {
+                        console.log(err);
+                    }
+                });
+            }
         }
         setWasValidated(true);
     }
@@ -149,7 +165,7 @@ const UnitTabView = ({location}) => {
         ...(sqft_create && {squareFeet: sqft_create}),
         ...(numberOfUnits_create && {numberOfUnitsByType: numberOfUnits_create})
         };
-        setUnitSummary(unitSummary.concat(newUnit));
+        setUnitSummary([...unitSummary, newUnit]);
         toggleUnitSummaryModal();
     }
     
@@ -263,7 +279,7 @@ const UnitTabView = ({location}) => {
             ...(sqft_available && {squareFeet: sqft_available}),
             available: true
         };
-        setUnits(units.concat(newUnit));
+        setUnits([...units, newUnit]);
         toggleUnitAvailableModal();
     }
     
@@ -344,7 +360,7 @@ const UnitTabView = ({location}) => {
             ...(frequency_extra && {frequency: frequency_extra}),
             ...(details_extra && {details: details_extra})
         };
-        setExtras(extras.concat(newExtra));
+        setExtras([...extras, newExtra]);
         toggleExtrasModal();
     }
 

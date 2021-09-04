@@ -10,9 +10,11 @@ import { AppContext } from '../../context/Store';
 import { SET_BANNER_IMAGE_PENDING, SET_DETAIL_PAGE_IMAGES_PENDING, UPDATE_PREVIEW } from '../../context/ActionTypes';
 import ImageCard from '../imageCard/ImageCard';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
+import { useHistory } from 'react-router-dom';
 
 const MediaTabView = ({location}) => {
     const [state, dispatch] = useContext(AppContext);
+    const history = useHistory();
 
     const [detailPageImages, setDetailPageImages] = useState();
     const [bannerImage, setBannerImage] = useState();
@@ -50,96 +52,179 @@ const MediaTabView = ({location}) => {
     
     const handleFormSubmit = (e, publish) => {
         e.preventDefault();
-        // First update the location data.
-        // The server will be responsible for deleting any images that are no longer in the new request.
-        const updateRequest = publish
-        ?
-        {...state.previewLocation, ...(state.previewLocation.bannerImage ?? {bannerImage: null}), _id: state.previewLocation._id, isPublished: true, isDraft: false}
-        :
-        {...state.previewLocation, ...(state.previewLocation.bannerImage ?? {bannerImage: null}), _id: state.previewLocation._id}
-        API.updateLocation_hideToast(updateRequest, (res, err) => {
-            if (res && res.status === 200) {
-                // Once location is saved if there are pending images upload to cloudinary.
-                if (state.bannerImage_pending || state.detailPageImages_pending) {
-                    const files = [];
-                    const locationImageRequest = {_id: location._id};
-                    if (state.bannerImage_pending && state.bannerImage_pending.file) {
-                        files.push(state.bannerImage_pending.file);
-                        locationImageRequest.bannerImage = {
-                            src: '',
-                            alt: location.name + ' banner image'
-                        };
-                    }
-                    if (state.detailPageImages_pending) {
-                        locationImageRequest.detailPageImages = [];
-                        for (let i = 0; i < state.detailPageImages_pending.length; i++) {
-                            files.push(state.detailPageImages_pending[i].file);
-                            locationImageRequest.detailPageImages.push({
+        if (state.previewLocation._id) {
+            // First update the location data.
+            // The server will be responsible for deleting any images that are no longer in the new request.
+            const updateRequest = publish
+            ?
+            {...state.previewLocation, ...(state.previewLocation.bannerImage ?? {bannerImage: null}), _id: state.previewLocation._id, isPublished: true, isDraft: false}
+            :
+            {...state.previewLocation, ...(state.previewLocation.bannerImage ?? {bannerImage: null}), _id: state.previewLocation._id}
+            API.updateLocation_hideToast(updateRequest, (res, err) => {
+                if (res && res.status === 200) {
+                    // Once location is saved if there are pending images upload to cloudinary.
+                    if (state.bannerImage_pending || state.detailPageImages_pending) {
+                        const files = [];
+                        const locationImageRequest = {_id: state.previewLocation._id};
+                        if (state.bannerImage_pending && state.bannerImage_pending.file) {
+                            files.push(state.bannerImage_pending.file);
+                            locationImageRequest.bannerImage = {
                                 src: '',
-                                thumbnail: '',
-                                alt: state.detailPageImages_pending[i].alt
-                            });
+                                alt: state.previewLocation.name + ' banner image'
+                            };
                         }
-                    }
-                    API.uploadImages(files, (res, err) => {
-                        if (res) {
-                            // After images have been uploaded to cloudinary update the location record with the new images.
-                            if (locationImageRequest.bannerImage) {
-                                locationImageRequest.bannerImage.src = res[0].data.secure_url;
-                                res.shift();
+                        if (state.detailPageImages_pending) {
+                            locationImageRequest.detailPageImages = [];
+                            for (let i = 0; i < state.detailPageImages_pending.length; i++) {
+                                files.push(state.detailPageImages_pending[i].file);
+                                locationImageRequest.detailPageImages.push({
+                                    src: '',
+                                    thumbnail: '',
+                                    alt: state.detailPageImages_pending[i].alt
+                                });
                             }
-                            if (locationImageRequest.detailPageImages) {
-                                for (let i = 0; i < res.length; i++) {
-                                    locationImageRequest.detailPageImages[i].src = res[i].data.secure_url;
-                                    locationImageRequest.detailPageImages[i].thumbnail = res[i].data.secure_url;
+                        }
+                        API.uploadImages(files, (res, err) => {
+                            if (res) {
+                                // After images have been uploaded to cloudinary update the location record with the new images.
+                                if (locationImageRequest.bannerImage) {
+                                    locationImageRequest.bannerImage.src = res[0].data.secure_url;
+                                    res.shift();
                                 }
-                                locationImageRequest.detailPageImages = locationImageRequest.detailPageImages.concat(detailPageImages);
+                                if (locationImageRequest.detailPageImages) {
+                                    for (let i = 0; i < res.length; i++) {
+                                        locationImageRequest.detailPageImages[i].src = res[i].data.secure_url;
+                                        locationImageRequest.detailPageImages[i].thumbnail = res[i].data.secure_url;
+                                    }
+                                    locationImageRequest.detailPageImages = locationImageRequest.detailPageImages.concat(detailPageImages);
+                                }
+                                API.updateLocation_hideToast(locationImageRequest, (res, err) => {
+                                    if (res && res.status === 200) {
+                                        console.log('success');
+                                        if (publish) {
+                                            setIsPublished(true);
+                                            HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Location Published!');
+                                        }
+                                        else {
+                                            HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Update Successful!');
+                                        }
+                                        // Update the bannerImage object and the detailPageImages object with the new images.
+                                        // Reset the bannerImage_pending and detailPageImages_pending context variables
+                                        if (locationImageRequest.bannerImage) {
+                                            setBannerImage(locationImageRequest.bannerImage);
+                                            dispatch({type: SET_BANNER_IMAGE_PENDING, payload: undefined});
+                                        }
+                                        if (locationImageRequest.detailPageImages) {
+                                            setDetailPageImages(locationImageRequest.detailPageImages);
+                                            dispatch({type: SET_DETAIL_PAGE_IMAGES_PENDING, payload: undefined});
+                                        }
+                                    }
+                                    else if (err) {
+                                        console.log(err);
+                                    }
+                                });
                             }
-                            API.updateLocation_hideToast(locationImageRequest, (res, err) => {
-                                if (res && res.status === 200) {
-                                    console.log('success');
-                                    if (publish) {
-                                        setIsPublished(true);
-                                        HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Location Published!');
-                                    }
-                                    else {
-                                        HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Update Successful!');
-                                    }
-                                    // Update the bannerImage object and the detailPageImages object with the new images.
-                                    // Reset the bannerImage_pending and detailPageImages_pending context variables
-                                    if (locationImageRequest.bannerImage) {
-                                        setBannerImage(locationImageRequest.bannerImage);
-                                        dispatch({type: SET_BANNER_IMAGE_PENDING, payload: undefined});
-                                    }
-                                    if (locationImageRequest.detailPageImages) {
-                                        setDetailPageImages(locationImageRequest.detailPageImages);
-                                        dispatch({type: SET_DETAIL_PAGE_IMAGES_PENDING, payload: undefined});
-                                    }
-                                }
-                                else if (err) {
-                                    console.log(err);
-                                }
-                            });
-                        }
-                        else if (err) {
-                            console.log(err);
-                        }
-                    });
-                }
-                else {
-                    if (publish) {
-                        setIsPublished(true);
-                        HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Location Published!');
+                            else if (err) {
+                                console.log(err);
+                            }
+                        });
                     }
                     else {
-                        HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Update Successful!');
+                        if (publish) {
+                            setIsPublished(true);
+                            HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Location Published!');
+                        }
+                        else {
+                            HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Update Successful!');
+                        }
                     }
                 }
-            }
-            else if (err) {
-                console.log(err);
-            }
-        });
+                else if (err) {
+                    console.log(err);
+                }
+            });
+        }
+        else {
+            API.createLocation(state.previewLocation, (res, err) => {
+                if (res && res.status === 200) {
+                    // Once location is saved if there are pending images upload to cloudinary.
+                    const idField = res.data._id;
+                    if (state.bannerImage_pending || state.detailPageImages_pending) {
+                        const files = [];
+                        const locationImageRequest = {_id: idField};
+                        if (state.bannerImage_pending && state.bannerImage_pending.file) {
+                            files.push(state.bannerImage_pending.file);
+                            locationImageRequest.bannerImage = {
+                                src: '',
+                                alt: state.previewLocation.name + ' banner image'
+                            };
+                        }
+                        if (state.detailPageImages_pending) {
+                            locationImageRequest.detailPageImages = [];
+                            for (let i = 0; i < state.detailPageImages_pending.length; i++) {
+                                files.push(state.detailPageImages_pending[i].file);
+                                locationImageRequest.detailPageImages.push({
+                                    src: '',
+                                    thumbnail: '',
+                                    alt: state.detailPageImages_pending[i].alt
+                                });
+                            }
+                        }
+                        API.uploadImages(files, (res, err) => {
+                            if (res) {
+                                // After images have been uploaded to cloudinary update the location record with the new images.
+                                if (locationImageRequest.bannerImage) {
+                                    locationImageRequest.bannerImage.src = res[0].data.secure_url;
+                                    res.shift();
+                                }
+                                if (locationImageRequest.detailPageImages) {
+                                    for (let i = 0; i < res.length; i++) {
+                                        locationImageRequest.detailPageImages[i].src = res[i].data.secure_url;
+                                        locationImageRequest.detailPageImages[i].thumbnail = res[i].data.secure_url;
+                                    }
+                                }
+                                API.updateLocation_hideToast(locationImageRequest, (res, err) => {
+                                    if (res && res.status === 200) {
+                                        console.log('success');
+                                        HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Update Successful!');
+                                        // Update the bannerImage object and the detailPageImages object with the new images.
+                                        // Reset the bannerImage_pending and detailPageImages_pending context variables
+                                        if (locationImageRequest.bannerImage) {
+                                            setBannerImage(locationImageRequest.bannerImage);
+                                            dispatch({type: SET_BANNER_IMAGE_PENDING, payload: undefined});
+                                        }
+                                        if (locationImageRequest.detailPageImages) {
+                                            setDetailPageImages(locationImageRequest.detailPageImages);
+                                            dispatch({type: SET_DETAIL_PAGE_IMAGES_PENDING, payload: undefined});
+                                        }
+                                        dispatch({type: UPDATE_PREVIEW, payload: res.data});
+                                        history.push(`/location/${res.data._id}`);
+                                    }
+                                    else if (err) {
+                                        console.log(err);
+                                    }
+                                });
+                            }
+                            else if (err) {
+                                console.log(err);
+                            }
+                        });
+                    }
+                    else {
+                        if (publish) {
+                            setIsPublished(true);
+                            HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Location Published!');
+                        }
+                        else {
+                            HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Update Successful!');
+                        }
+                    }
+                }
+                else if (err) {
+                    console.log(err);
+                }
+            });
+        }
     }
 
     const handlePublish = (e) => {

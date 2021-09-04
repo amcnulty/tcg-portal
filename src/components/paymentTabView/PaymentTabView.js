@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
+import { useHistory } from 'react-router-dom';
 import { UPDATE_PREVIEW } from '../../context/ActionTypes';
 import { AppContext } from '../../context/Store';
 import { TAB_MEDIA } from '../../shared/Constants';
@@ -8,6 +9,7 @@ import TabView from '../tabView/TabView';
 
 const PaymentTabView = ({location}) => {
     const [state, dispatch] = useContext(AppContext);
+    const history = useHistory();
 
     const [enablePayments, setEnablePayments] = useState(false);
     const [paypalEmail, setPaypalEmail] = useState('');
@@ -44,22 +46,36 @@ const PaymentTabView = ({location}) => {
         }
         else {
             e.preventDefault();
-            const updateRequest = publish ? { ...state.previewLocation, isPublished: true, isDraft: false } : state.previewLocation;
-            API.updateLocation_hideToast(updateRequest, (res, err) => {
-                if (res && res.status === 200) {
-                    console.log('success!');
-                    if (publish) {
-                        setIsPublished(true);
-                        HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Location Published!');
+            if (state.previewLocation._id) {
+                const updateRequest = publish ? { ...state.previewLocation, isPublished: true, isDraft: false } : state.previewLocation;
+                API.updateLocation_hideToast(updateRequest, (res, err) => {
+                    if (res && res.status === 200) {
+                        console.log('success!');
+                        if (publish) {
+                            setIsPublished(true);
+                            HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Location Published!');
+                        }
+                        else {
+                            HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Update Successful!');
+                        }
                     }
-                    else {
-                        HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Update Successful!');
+                    else if (err) {
+                        console.log(err);
                     }
-                }
-                else if (err) {
-                    console.log(err);
-                }
-            });
+                });
+            }
+            else {
+                API.createLocation(state.previewLocation, (res, err) => {
+                    if (res && res.status === 200) {
+                        console.log('success!');
+                        dispatch({type: UPDATE_PREVIEW, payload: res.data});
+                        history.push(`/location/${res.data._id}`);
+                    }
+                    else if (err) {
+                        console.log(err);
+                    }
+                });
+            }
         }
         setWasValidated(true);
     }

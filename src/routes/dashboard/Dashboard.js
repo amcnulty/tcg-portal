@@ -29,8 +29,12 @@ const Dashboard = () => {
                 <div className="row">
                     <div className="col-12 col-md-6">
                         <div className="card p-5 mb-3 mb-md-0">
-                            <h3>Number of Locations</h3>
-                            <h5 className='fw-bold themeText'>{locations.length}</h5>
+                            <h3>Published Locations</h3>
+                            <h5 className='fw-bold themeText'>{locations.filter(location => location.isPublished).length}</h5>
+                            <h3>Drafts</h3>
+                            <h5 className='fw-bold themeText'>{locations.filter(location => location.isDraft).length}</h5>
+                            <h3>Inactive Locations</h3>
+                            <h5 className='fw-bold themeText'>{locations.filter(location => !location.isDraft && !location.isPublished).length}</h5>
                             <Link to='/locations'>Manage Locations</Link>
                         </div>
                     </div>
