@@ -18,6 +18,12 @@ const LocationCard = ({location}) => {
                 <div
                     className="card"
                 >
+                    {
+                        location.isDraft &&
+                        <div className="draftBadge position-absolute badge bg-black bg-opacity-75">
+                            <h4 className='m-0'>DRAFT</h4>
+                        </div>
+                    }
                     <div className="card-header themeBackground">
                         <h3>{location.name}</h3>
                     </div>

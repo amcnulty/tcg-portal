@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 import { OPEN_PREVIEW, RESET_PREVIEW, SET_TABVIEW } from '../../context/ActionTypes';
 import { AppContext } from '../../context/Store';
@@ -7,6 +8,8 @@ import { HELPERS } from '../../util/helpers';
 
 const TabView = props => {
     const [state, dispatch] = useContext(AppContext);
+    const routeLocation = useLocation();
+    const locationId = routeLocation.pathname.split('/location/')[1];
     const [previewModal, setPreviewModal] = useState(false);
     const [previewHref, setPreviewHref] = useState('');
 
@@ -44,9 +47,26 @@ const TabView = props => {
                 <div className="card p-4 mt-4">
                     <div>
                         {
-                            props.showSaveButton && <button form={props.formId} type='submit'  className="btn btn-primary">Save</button>
+                            locationId === 'new'
+                            ?
+                                <button form={props.formId} type='submit' className="btn btn-primary">Save As Draft</button>
+                            :
+                            <>
+                                <button form={props.formId} type='submit' className="btn btn-primary">Save</button>
+                                {
+                                    !props.isPublished && 
+                                    <button
+                                        form={props.formId}
+                                        type='submit'
+                                        className="btn btn-primary ms-2"
+                                        onClick={props.onPublish}
+                                    >
+                                        Publish
+                                    </button>
+                                }
+                                <button className="btn btn-secondary ms-2" onClick={handlePreviewClick}>Create Preview</button>
+                            </>
                         }
-                        <button className="btn btn-secondary ms-2" onClick={handlePreviewClick}>Create Preview</button>
                     </div>
                 </div>
                 <div className="tabViewNavSection d-flex justify-content-between my-5">

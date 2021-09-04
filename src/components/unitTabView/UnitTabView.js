@@ -4,6 +4,7 @@ import { UPDATE_PREVIEW } from '../../context/ActionTypes';
 import { AppContext } from '../../context/Store';
 import { TAB_MEDIA, TAB_THUMBNAIL } from '../../shared/Constants';
 import { API } from '../../util/API';
+import { HELPERS, TOAST_TYPES } from '../../util/helpers';
 import TabView from '../tabView/TabView';
 import UnitCard from '../unitCard/UnitCard';
 
@@ -14,6 +15,7 @@ const UnitTabView = ({location}) => {
     const [unitSummary, setUnitSummary] = useState();
     const [units, setUnits] = useState();
     const [extras, setExtras] = useState();
+    const [isPublished, setIsPublished] = useState();
 
     // Fields for unit summary creation modal
     const [unitName_create, setUnitName_create] = useState('');
@@ -64,7 +66,7 @@ const UnitTabView = ({location}) => {
      */
     useEffect(() => {
         updatePreview();
-    }, [unitSummary, units, extras]);
+    }, [unitSummary, units, extras, isPublished]);
 
     useEffect(() => {
         const locationWithChanges = {
@@ -74,18 +76,27 @@ const UnitTabView = ({location}) => {
         setUnitSummary(locationWithChanges.unitSummary ? locationWithChanges.unitSummary : '');
         setUnits(locationWithChanges.units ? locationWithChanges.units : '');
         setExtras(locationWithChanges.extras ? locationWithChanges.extras : '');
+        setIsPublished(locationWithChanges.isPublished ? locationWithChanges.isPublished: null);
     }, [location]);
 
-    const handleFormSubmit = e => {
+    const handleFormSubmit = (e, publish) => {
         if (!e.target.checkValidity()) {
             e.preventDefault();
             e.stopPropagation();
         }
         else {
             e.preventDefault();
-            API.updateLocation(state.previewLocation, (res, err) => {
+            const updateRequest = publish ? { ...state.previewLocation, isPublished: true, isDraft: false } : state.previewLocation;
+            API.updateLocation_hideToast(updateRequest, (res, err) => {
                 if (res && res.status === 200) {
                     console.log('success!');
+                    if (publish) {
+                        setIsPublished(true);
+                        HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Location Published!');
+                    }
+                    else {
+                        HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Update Successful!');
+                    }
                 }
                 else if (err) {
                     console.log(err);
@@ -94,6 +105,11 @@ const UnitTabView = ({location}) => {
         }
         setWasValidated(true);
     }
+
+    const handlePublish = (e) => {
+        e.preventDefault();
+        handleFormSubmit(e, true);
+    }
     /**
      * Updates the preview in context so when it is time to show the preview data from this tab will be included.
      */
@@ -101,7 +117,8 @@ const UnitTabView = ({location}) => {
         const previewLocation = {
             ...(unitSummary && {unitSummary}),
             ...(units && {units}),
-            ...(extras && {extras})
+            ...(extras && {extras}),
+            ...((isPublished != null) && {isPublished})
         };
         const payload = {
             ...location,
@@ -365,13 +382,14 @@ const UnitTabView = ({location}) => {
     return (
         <div className='UnitTabView'>
             <TabView
-                header={`Unit and Pricing Information ${location.name ? '- ' + location.name : ''}`}
+                header={`Unit and Pricing Information ${state.previewLocation.name ? '- ' + state.previewLocation.name : ''}`}
                 description='This section is for editing unit information including a summary of the units at this location and a list of what units are currently available.'
                 previousView={TAB_THUMBNAIL}
                 nextView={TAB_MEDIA}
                 formId='unitForm'
-                showSaveButton={location.isPublished}
+                isPublished={isPublished}
                 updatePreview={updatePreview}
+                onPublish={handlePublish}
             >
                 <div className='card editDetailCard p-4 my-4'>
                     <form id='unitForm' className={`needs-validation ${wasValidated ? 'was-validated' : ''}`} onSubmit={handleFormSubmit} noValidate>

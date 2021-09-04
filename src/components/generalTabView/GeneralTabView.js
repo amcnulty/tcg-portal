@@ -4,6 +4,7 @@ import { UPDATE_PREVIEW } from '../../context/ActionTypes';
 import { AppContext } from '../../context/Store';
 import { TAB_THUMBNAIL } from '../../shared/Constants';
 import { API } from '../../util/API';
+import { HELPERS, TOAST_TYPES } from '../../util/helpers';
 import CoordinatePicker from '../coordinatePicker/CoordinatePicker';
 import TabView from '../tabView/TabView';
 
@@ -24,6 +25,7 @@ const GeneralTabView = ({location}) => {
     const [contactName, setContactName] = useState('');
     const [contactPhone, setContactPhone] = useState('');
     const [contactEmail, setContactEmail] = useState('');
+    const [isPublished, setIsPublished] = useState();
 
     const [wasValidated, setWasValidated] = useState(false);
     const [slugErrorMessage, setSlugErrorMessage] = useState('');
@@ -33,7 +35,7 @@ const GeneralTabView = ({location}) => {
      */
     useEffect(() => {
         updatePreview();
-    }, [name, slug, addressFirstLine, addressSecondLine, coordinatesFromMap, lat, long, shortDescription, longDescription, currentFeature, features, contactName, contactPhone, contactEmail]);
+    }, [name, slug, addressFirstLine, addressSecondLine, coordinatesFromMap, lat, long, shortDescription, longDescription, currentFeature, features, contactName, contactPhone, contactEmail, isPublished]);
 
     useEffect(() => {
         const locationWithChanges = {
@@ -52,18 +54,27 @@ const GeneralTabView = ({location}) => {
         setContactName(locationWithChanges.contactName ? locationWithChanges.contactName : '');
         setContactPhone(locationWithChanges.contactPhone ? locationWithChanges.contactPhone : '');
         setContactEmail(locationWithChanges.contactEmail ? locationWithChanges.contactEmail : '');
+        setIsPublished(locationWithChanges.isPublished ? locationWithChanges.isPublished: null);
     }, [location]);
 
-    const handleFormSubmit = e => {
+    const handleFormSubmit = (e, publish) => {
         if (!e.target.checkValidity()) {
             e.preventDefault();
             e.stopPropagation();
         }
         else {
             e.preventDefault();
-            API.updateLocation(state.previewLocation, (res, err) => {
+            const updateRequest = publish ? { ...state.previewLocation, isPublished: true, isDraft: false } : state.previewLocation;
+            API.updateLocation_hideToast(updateRequest, (res, err) => {
                 if (res && res.status === 200) {
                     console.log('success!');
+                    if (publish) {
+                        setIsPublished(true);
+                        HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Location Published!');
+                    }
+                    else {
+                        HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Update Successful!');
+                    }
                 }
                 else if (err) {
                     if (err.response && err.response.status === 400) {
@@ -75,6 +86,11 @@ const GeneralTabView = ({location}) => {
             });
         }
         setWasValidated(true);
+    }
+
+    const handlePublish = (e) => {
+        e.preventDefault();
+        handleFormSubmit(e, true);
     }
 
     const handleHideLocation = () => {
@@ -110,7 +126,8 @@ const GeneralTabView = ({location}) => {
             ...(features && {features}),
             ...(contactName && {contactName}),
             ...(contactPhone && {contactPhone}),
-            ...(contactEmail && {contactEmail})
+            ...(contactEmail && {contactEmail}),
+            ...((isPublished != null) && {isPublished})
         };
         const payload = {
             ...location,
@@ -127,22 +144,23 @@ const GeneralTabView = ({location}) => {
     return (
         <div className='GeneralTabView'>
             <TabView
-                header={`General ${location.name ? '- ' + location.name : ''}`}
+                header={`General ${name ? '- ' + name : ''}`}
                 description='This section is for editing the general details about the location including the name, description, address, contact and coordinates.'
                 nextView={TAB_THUMBNAIL}
                 formId='generalForm'
-                showSaveButton={location.isPublished}
+                isPublished={isPublished}
                 updatePreview={updatePreview}
+                onPublish={handlePublish}
             >
                 <div className="card actionsSection p-4 my-4">
                     <h5>Quick Actions</h5>
                     <p>Below is a list of actions you can perform on this location record.</p>
                     {
-                        location.isPublished &&
+                        isPublished &&
                         <div className="d-flex flex-column my-4">
                             <p>View this location on the live site.</p>
                             <span>
-                                <a className='btn btn-outline-primary' href={`https://contractorsgarage.com/location/${location.slug}`} target='_blank'>View Location &nbsp; <i className="fas fa-external-link-alt"></i></a>
+                                <a className='btn btn-outline-primary' href={`https://contractorsgarage.com/location/${slug}`} target='_blank'>View Location &nbsp; <i className="fas fa-external-link-alt"></i></a>
                             </span>
                         </div>
                     }

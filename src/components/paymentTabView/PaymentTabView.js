@@ -3,6 +3,7 @@ import { UPDATE_PREVIEW } from '../../context/ActionTypes';
 import { AppContext } from '../../context/Store';
 import { TAB_MEDIA } from '../../shared/Constants';
 import { API } from '../../util/API';
+import { HELPERS, TOAST_TYPES } from '../../util/helpers';
 import TabView from '../tabView/TabView';
 
 const PaymentTabView = ({location}) => {
@@ -12,6 +13,7 @@ const PaymentTabView = ({location}) => {
     const [paypalEmail, setPaypalEmail] = useState('');
     const [markupPercentage, setMarkupPercentage] = useState('');
     const [markupAmount, setMarkupAmount] = useState('');
+    const [isPublished, setIsPublished] = useState();
 
     const [wasValidated, setWasValidated] = useState(false);
 
@@ -20,7 +22,7 @@ const PaymentTabView = ({location}) => {
      */
     useEffect(() => {
         updatePreview();
-    }, [enablePayments, paypalEmail, markupPercentage, markupAmount]);
+    }, [enablePayments, paypalEmail, markupPercentage, markupAmount, isPublished]);
 
     useEffect(() => {
         const locationWithChanges = {
@@ -28,21 +30,31 @@ const PaymentTabView = ({location}) => {
             ...state.previewLocation
         };
         setEnablePayments(locationWithChanges.enablePayments ? locationWithChanges.enablePayments : false);
+        console.log('setting enable payments with: ', locationWithChanges.enablePayments ? locationWithChanges.enablePayments : false);
         setPaypalEmail(locationWithChanges.paypalEmail ? locationWithChanges.paypalEmail : '');
         setMarkupPercentage(locationWithChanges.paymentMarkupPercent ? (locationWithChanges.paymentMarkupPercent * 100).toFixed(1) : '');
         setMarkupAmount(locationWithChanges.paymentMarkupFixed ? locationWithChanges.paymentMarkupFixed : '');
+        setIsPublished(locationWithChanges.isPublished ? locationWithChanges.isPublished: null);
     }, [location]);
 
-    const handleFormSubmit = e => {
+    const handleFormSubmit = (e, publish) => {
         if (!e.target.checkValidity()) {
             e.preventDefault();
             e.stopPropagation();
         }
         else {
             e.preventDefault();
-            API.updateLocation(state.previewLocation, (res, err) => {
+            const updateRequest = publish ? { ...state.previewLocation, isPublished: true, isDraft: false } : state.previewLocation;
+            API.updateLocation_hideToast(updateRequest, (res, err) => {
                 if (res && res.status === 200) {
                     console.log('success!');
+                    if (publish) {
+                        setIsPublished(true);
+                        HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Location Published!');
+                    }
+                    else {
+                        HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Update Successful!');
+                    }
                 }
                 else if (err) {
                     console.log(err);
@@ -50,6 +62,11 @@ const PaymentTabView = ({location}) => {
             });
         }
         setWasValidated(true);
+    }
+
+    const handlePublish = (e) => {
+        e.preventDefault();
+        handleFormSubmit(e, true);
     }
     /**
      * Updates the preview in context so when it is time to show the preview data from this tab will be included.
@@ -59,7 +76,8 @@ const PaymentTabView = ({location}) => {
             ...((enablePayments != null) && {enablePayments}),
             ...(paypalEmail) && {paypalEmail},
             ...(markupPercentage && {paymentMarkupPercent: (markupPercentage / 100).toFixed(3)}),
-            ...(markupAmount && {paymentMarkupFixed: markupAmount})
+            ...(markupAmount && {paymentMarkupFixed: markupAmount}),
+            ...((isPublished != null) && {isPublished})
         };
         const payload = {
             ...location,
@@ -72,12 +90,13 @@ const PaymentTabView = ({location}) => {
     return (
         <div className='PaymentTabView'>
             <TabView
-                header={`Payment Processing ${location.name ? '- ' + location.name : ''}`}
+                header={`Payment Processing ${state.previewLocation.name ? '- ' + state.previewLocation.name : ''}`}
                 description='This section is for enabling payment processing with PayPal for this location. Optional fees can be set which will be added to each payment that is made.'
                 previousView={TAB_MEDIA}
                 formId='paymentForm'
-                showSaveButton={location.isPublished}
+                isPublished={isPublished}
                 updatePreview={updatePreview}
+                onPublish={handlePublish}
             >
                 <div className='card editDetailCard p-4'>
                     <form id='paymentForm' className={`needs-validation ${wasValidated ? 'was-validated' : ''}`} onSubmit={handleFormSubmit} noValidate>

@@ -18,17 +18,23 @@ const LocationEdit = () => {
     const [state, dispatch] = useContext(AppContext);
 
     useEffect(() => {
-        API.getLocationById(locationId, (res, err) => {
-            if (res && res.status === 200) {
-                setLocation(res.data);
-            }
-            else {
-                console.log(err);
-                if (err.response.status === 401) {
-                    history.push('/locations');
+        if (locationId === 'new') {
+            setLocation({isDraft: true});
+        }
+        else {
+            API.getLocationById(locationId, (res, err) => {
+                if (res && res.status === 200) {
+                    setLocation(res.data);
                 }
-            }
-        });
+                else {
+                    console.log(err);
+                    if (err.response.status === 401) {
+                        history.push('/locations');
+                    }
+                }
+            });
+        }
+
         return () => {
             // reset the preview to empty so the data doesn't cross with other locations that get opened.
             setTimeout(() => {

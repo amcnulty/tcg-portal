@@ -13,6 +13,7 @@ const ThumbnailTabView = ({location}) => {
     const [state, dispatch] = useContext(AppContext);
 
     const [thumbnailImage, setThumbnailImage] = useState();
+    const [isPublished, setIsPublished] = useState();
     
     const compress = new Compress();
     /**
@@ -20,7 +21,7 @@ const ThumbnailTabView = ({location}) => {
      */
     useEffect(() => {
         updatePreview();
-    }, [thumbnailImage]);
+    }, [thumbnailImage, isPublished]);
 
     useEffect(() => {
         const locationWithChanges = {
@@ -28,11 +29,17 @@ const ThumbnailTabView = ({location}) => {
             ...state.previewLocation
         };
         setThumbnailImage(locationWithChanges.thumbnailImage ? locationWithChanges.thumbnailImage : undefined);
+        setIsPublished(locationWithChanges.isPublished ? locationWithChanges.isPublished: null);
     }, [location]);
 
-    const handleFormSubmit = e => {
+    const handleFormSubmit = (e, publish) => {
         e.preventDefault();
-        API.updateLocation_hideToast({...state.previewLocation, ...(state.previewLocation.thumbnailImage ?? {thumbnailImage: null}), _id: state.previewLocation._id}, (res, err) => {
+        const updateRequest = publish
+        ?
+        {...state.previewLocation, ...(state.previewLocation.thumbnailImage ?? {thumbnailImage: null}), _id: state.previewLocation._id, isPublished: true, isDraft: false}
+        :
+        {...state.previewLocation, ...(state.previewLocation.thumbnailImage ?? {thumbnailImage: null}), _id: state.previewLocation._id}
+        API.updateLocation_hideToast(updateRequest, (res, err) => {
             if (res && res.status === 200) {
                 if (state.thumbnailImage_pending) {
                     API.uploadImages([state.thumbnailImage_pending.file], (res, err) => {
@@ -44,9 +51,16 @@ const ThumbnailTabView = ({location}) => {
                                     alt: location.name
                                 }
                             }
-                            API.updateLocation(locationImageRequest, (res, err) => {
+                            API.updateLocation_hideToast(locationImageRequest, (res, err) => {
                                 if (res && res.status === 200) {
                                     console.log('Thumbnail Upload Success!');
+                                    if (publish) {
+                                        setIsPublished(true);
+                                        HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Location Published!');
+                                    }
+                                    else {
+                                        HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Update Successful!');
+                                    }
                                     setThumbnailImage(locationImageRequest.thumbnailImage);
                                     dispatch({type: SET_THUMBNAIL_IMAGE_PENDING, payload: undefined});
                                 }
@@ -61,7 +75,13 @@ const ThumbnailTabView = ({location}) => {
                     });
                 }
                 else {
-                    HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Update Successful!');
+                    if (publish) {
+                        setIsPublished(true);
+                        HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Location Published!');
+                    }
+                    else {
+                        HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Update Successful!');
+                    }
                 }
             }
             else if (err) {
@@ -69,12 +89,18 @@ const ThumbnailTabView = ({location}) => {
             }
         });
     }
+
+    const handlePublish = (e) => {
+        e.preventDefault();
+        handleFormSubmit(e, true);
+    }
     /**
      * Updates the preview in context so when it is time to show the preview data from this tab will be included.
      */
     const updatePreview = () => {
         const previewLocation = {
-            thumbnailImage
+            thumbnailImage,
+            ...((isPublished != null) && {isPublished})
         };
         const payload = {
             ...location,
@@ -134,13 +160,14 @@ const ThumbnailTabView = ({location}) => {
     return (
         <div className='ThumbnailTabView'>
             <TabView
-                header={`Thumbnail ${location.name ? '- ' + location.name : ''}`}
+                header={`Thumbnail ${state.previewLocation.name ? '- ' + state.previewLocation.name : ''}`}
                 description='This section is for editing the thumbnail image that will be shown on the map view when users click on the marker for this location.'
                 previousView={TAB_GENERAL}
                 nextView={TAB_UNIT}
                 formId='thumbnailForm'
-                showSaveButton={location.isPublished}
+                isPublished={isPublished}
                 updatePreview={updatePreview}
+                onPublish={handlePublish}
             >
                 <div className='card editDetailCard p-4'>
                     <form id='thumbnailForm' onSubmit={handleFormSubmit}>

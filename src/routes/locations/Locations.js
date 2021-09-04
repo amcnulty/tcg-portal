@@ -1,12 +1,14 @@
 import React, { useContext, useEffect, useState } from 'react';
+import { useHistory } from 'react-router-dom';
 import LocationCard from '../../components/locationCard/LocationCard';
 import { AppContext } from '../../context/Store';
 import { API } from '../../util/API';
 import './Locations.sass';
 
 const Locations = () => {
-    const [locations, setLocations] = useState([]);
     const [state, dispatch] = useContext(AppContext);
+    const history = useHistory();
+    const [locations, setLocations] = useState([]);
 
     useEffect(() => {
         API.getLocations((res, err) => {
@@ -15,6 +17,10 @@ const Locations = () => {
             }
         });
     }, []);
+
+    const handleNewLocation = () => {
+        history.push('/location/new');
+    }
 
     return (
         <div className='Locations'>
@@ -29,7 +35,13 @@ const Locations = () => {
                             ?
                             <>
                                 <p>Create a new location. You will be able to first create a draft and preview what it will look like before publishing.</p>
-                                <button className="btn btn-primary col-xl-2 col-lg-3 col-sm-4">New Location</button>
+                                <button
+                                    className="btn btn-primary col-xl-2 col-lg-3 col-sm-4"
+                                    type='button'
+                                    onClick={handleNewLocation}
+                                >
+                                    New Location
+                                </button>
                             </>
                             :
                             <>
@@ -44,13 +56,21 @@ const Locations = () => {
                     </div>
                 </div>
                 <div className="row mb-5 pb-5">
-                    <h4>Your Locations</h4>
                     {
-                        locations.map(location => (
-                            <div className="col-12 col-md-6 col-xxl-4 my-2" key={location._id}>
-                                <LocationCard location={location}/>
-                            </div>
-                        ))
+                        locations && locations.length > 0
+                        ?
+                        <>
+                            <h4>Your Locations</h4>
+                            {
+                                locations.map(location => (
+                                    <div className="col-12 col-md-6 col-xxl-4 my-2" key={location._id}>
+                                        <LocationCard location={location}/>
+                                    </div>
+                                ))
+                            }
+                        </>
+                        :
+                        <p className="text-secondary pt-5">Currently no locations have been added. To create a new location click the <b>New Location</b> button above.</p>
                     }
                 </div>
             </div>

@@ -16,6 +16,7 @@ const MediaTabView = ({location}) => {
 
     const [detailPageImages, setDetailPageImages] = useState();
     const [bannerImage, setBannerImage] = useState();
+    const [isPublished, setIsPublished] = useState();
 
     // State for new image object being created before it is uploaded
     const [currentImage, setCurrentImage] = useState();
@@ -35,7 +36,7 @@ const MediaTabView = ({location}) => {
      */
     useEffect(() => {
         updatePreview();
-    }, [detailPageImages, bannerImage]);
+    }, [detailPageImages, bannerImage, isPublished]);
 
     useEffect(() => {
         const locationWithChanges = {
@@ -44,13 +45,19 @@ const MediaTabView = ({location}) => {
         };
         setDetailPageImages(locationWithChanges.detailPageImages ? locationWithChanges.detailPageImages : '');
         setBannerImage(locationWithChanges.bannerImage ? locationWithChanges.bannerImage : undefined);
+        setIsPublished(locationWithChanges.isPublished ? locationWithChanges.isPublished: null);
     }, [location]);
     
-    const handleFormSubmit = e => {
+    const handleFormSubmit = (e, publish) => {
         e.preventDefault();
         // First update the location data.
         // The server will be responsible for deleting any images that are no longer in the new request.
-        API.updateLocation_hideToast({...state.previewLocation, ...(state.previewLocation.bannerImage ?? {bannerImage: null}), _id: state.previewLocation._id}, (res, err) => {
+        const updateRequest = publish
+        ?
+        {...state.previewLocation, ...(state.previewLocation.bannerImage ?? {bannerImage: null}), _id: state.previewLocation._id, isPublished: true, isDraft: false}
+        :
+        {...state.previewLocation, ...(state.previewLocation.bannerImage ?? {bannerImage: null}), _id: state.previewLocation._id}
+        API.updateLocation_hideToast(updateRequest, (res, err) => {
             if (res && res.status === 200) {
                 // Once location is saved if there are pending images upload to cloudinary.
                 if (state.bannerImage_pending || state.detailPageImages_pending) {
@@ -88,9 +95,16 @@ const MediaTabView = ({location}) => {
                                 }
                                 locationImageRequest.detailPageImages = locationImageRequest.detailPageImages.concat(detailPageImages);
                             }
-                            API.updateLocation(locationImageRequest, (res, err) => {
+                            API.updateLocation_hideToast(locationImageRequest, (res, err) => {
                                 if (res && res.status === 200) {
                                     console.log('success');
+                                    if (publish) {
+                                        setIsPublished(true);
+                                        HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Location Published!');
+                                    }
+                                    else {
+                                        HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Update Successful!');
+                                    }
                                     // Update the bannerImage object and the detailPageImages object with the new images.
                                     // Reset the bannerImage_pending and detailPageImages_pending context variables
                                     if (locationImageRequest.bannerImage) {
@@ -113,7 +127,13 @@ const MediaTabView = ({location}) => {
                     });
                 }
                 else {
-                    HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Update Successful!');
+                    if (publish) {
+                        setIsPublished(true);
+                        HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Location Published!');
+                    }
+                    else {
+                        HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Update Successful!');
+                    }
                 }
             }
             else if (err) {
@@ -121,13 +141,19 @@ const MediaTabView = ({location}) => {
             }
         });
     }
+
+    const handlePublish = (e) => {
+        e.preventDefault();
+        handleFormSubmit(e, true);
+    }
     /**
      * Updates the preview in context so when it is time to show the preview data from this tab will be included.
      */
     const updatePreview = () => {
         const previewLocation = {
             ...(detailPageImages) && {detailPageImages},
-            bannerImage
+            bannerImage,
+            ...((isPublished != null) && {isPublished})
         };
         const payload = {
             ...location,
@@ -284,13 +310,14 @@ const MediaTabView = ({location}) => {
     return (
         <div className='MediaTabView'>
             <TabView
-                header={`Media Upload ${location.name ? '- ' + location.name : ''}`}
+                header={`Media Upload ${state.previewLocation.name ? '- ' + state.previewLocation.name : ''}`}
                 description='This section is for uploading image media which can have optional caption text that will be shown with the image.'
                 previousView={TAB_UNIT}
                 nextView={TAB_PAYMENT}
                 formId='mediaForm'
-                showSaveButton={location.isPublished}
+                isPublished={isPublished}
                 updatePreview={updatePreview}
+                onPublish={handlePublish}
             >
                 <div className='card editDetailCard p-4'>
                     <form id='mediaForm' onSubmit={handleFormSubmit}>
