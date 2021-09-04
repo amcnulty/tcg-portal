@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 import { UPDATE_PREVIEW } from '../../context/ActionTypes';
 import { AppContext } from '../../context/Store';
@@ -12,6 +12,8 @@ import TabView from '../tabView/TabView';
 const GeneralTabView = ({location}) => {
     const [state, dispatch] = useContext(AppContext);
     const history = useHistory();
+    const routeLocation = useLocation();
+    const locationId = routeLocation.pathname.split('/location/')[1];
 
     const [name, setName] = useState('');
     const [slug, setSlug] = useState('');
@@ -114,11 +116,29 @@ const GeneralTabView = ({location}) => {
     }
 
     const handleHideLocation = () => {
-
+        API.hideLocation(state.previewLocation._id, (res, err) => {
+            if (res && res.status === 200) {
+                console.log('success');
+                setIsPublished(false);
+            }
+            else if (err) {
+                console.log(err);
+            }
+        });
     }
 
     const handleDeleteLocation = () => {
-
+        if (window.confirm('Are you sure you want to delete this location? This action cannot be reversed.')) {
+            API.deleteLocation(state.previewLocation._id, (res, err) => {
+                if (res && res.status === 200) {
+                    console.log('success');
+                    history.push('/locations');
+                }
+                else if (err) {
+                    console.log(err);
+                }
+            });
+        }
     }
 
     const handleSlugChange = e => {
@@ -172,31 +192,37 @@ const GeneralTabView = ({location}) => {
                 updatePreview={updatePreview}
                 onPublish={handlePublish}
             >
-                <div className="card actionsSection p-4 my-4">
-                    <h5>Quick Actions</h5>
-                    <p>Below is a list of actions you can perform on this location record.</p>
-                    {
-                        isPublished &&
+                {
+                    locationId !== 'new' &&
+                    <div className="card actionsSection p-4 my-4">
+                        <h5>Quick Actions</h5>
+                        <p>Below is a list of actions you can perform on this location record.</p>
+                        {
+                            isPublished &&
+                            <div className="d-flex flex-column my-4">
+                                <p>View this location on the live site.</p>
+                                <span>
+                                    <a className='btn btn-outline-primary' href={`https://contractorsgarage.com/location/${slug}`} target='_blank'>View Location &nbsp; <i className="fas fa-external-link-alt"></i></a>
+                                </span>
+                            </div>
+                        }
+                        {
+                            isPublished &&
+                            <div className="d-flex flex-column my-4">
+                                <p>Hide this location from view on the live site. This will only temporarily disable the location and will not delete it. You can reverse this action at any time.</p>
+                                <span>
+                                    <button className="btn btn-outline-secondary" onClick={handleHideLocation}>Hide Location</button>
+                                </span>
+                            </div>
+                        }
                         <div className="d-flex flex-column my-4">
-                            <p>View this location on the live site.</p>
+                            <p>Delete this location from the database. Warning this action cannot be reversed!</p>
                             <span>
-                                <a className='btn btn-outline-primary' href={`https://contractorsgarage.com/location/${slug}`} target='_blank'>View Location &nbsp; <i className="fas fa-external-link-alt"></i></a>
+                                <button className="btn btn-outline-danger" onClick={handleDeleteLocation}>Delete</button>
                             </span>
                         </div>
-                    }
-                    <div className="d-flex flex-column my-4">
-                        <p>Hide this location from view on the live site. This will only temporarily disable the location and will not delete it. You can reverse this action at any time.</p>
-                        <span>
-                            <button className="btn btn-outline-secondary" onClick={handleHideLocation}>Hide Location</button>
-                        </span>
                     </div>
-                    <div className="d-flex flex-column my-4">
-                        <p>Delete this location from the database. Warning this action cannot be reversed!</p>
-                        <span>
-                            <button className="btn btn-outline-danger" onClick={handleDeleteLocation}>Delete</button>
-                        </span>
-                    </div>
-                </div>
+                }
                 <div className='card editDetailCard p-4'>
                     <form id='generalForm' className={`needs-validation ${wasValidated ? 'was-validated' : ''}`} onSubmit={handleFormSubmit} noValidate>
                         <h5>Details</h5>

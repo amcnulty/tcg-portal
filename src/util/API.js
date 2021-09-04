@@ -89,6 +89,10 @@ export const API = {
     *          !!                          !!
     *          !!##########################!!
     */
+   /**
+    * Gets all locations for user access level.
+    * @param {Function} cb Callback function that returns response or error of the server request.
+    */
     getLocations: (cb) => {
         GET('/portal/locations', cb, null, true);
     },
@@ -132,6 +136,22 @@ export const API = {
     */
     createPreview: (data, cb) => {
         POST('/portal/location/preview', data, cb, { type: TOAST_TYPES.SUCCESS, message: 'Preview has been generated!'});
+    },
+    /**
+     * Hides a location by unpublishing it based on the given id.
+     * @param {String} id Id of the location to hide.
+     * @param {Function} cb Callback function that returns response or error of the server request.
+     */
+    hideLocation: (id, cb) => {
+        POST(`/portal/location/hide/${id}`, null, cb, { type: TOAST_TYPES.SUCCESS, message: 'Location has been hidden.'});
+    },
+    /**
+     * Deletes a location with the given id.
+     * @param {String} id Id of the location to delete.
+     * @param {Function} cb Callback function that returns response or error of the server request.
+     */
+    deleteLocation: (id, cb) => {
+        DELETE(`/portal/location/${id}`, cb, { type: TOAST_TYPES.SUCCESS, message: 'Location has been deleted.'});
     },
     /*
     *          !!##########################!!

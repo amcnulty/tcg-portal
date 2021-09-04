@@ -4,7 +4,10 @@ import defaultImage from './default.png';
 import { Dropdown, DropdownItem, DropdownMenu, DropdownToggle } from 'reactstrap';
 import { Link } from 'react-router-dom';
 
-const LocationCard = ({location}) => {
+const LocationCard = (props) => {
+
+    const {location} = props;
+
     const [dropdownOpen, setDropdownOpen] = useState(false);
   
     const toggle = () => setDropdownOpen(prevState => !prevState);
@@ -22,6 +25,18 @@ const LocationCard = ({location}) => {
                         location.isDraft &&
                         <div className="draftBadge position-absolute badge bg-black bg-opacity-75">
                             <h4 className='m-0'>DRAFT</h4>
+                        </div>
+                    }
+                    {
+                        location.isPublished &&
+                        <div className="draftBadge position-absolute badge bg-primary bg-opacity-75">
+                            <h4 className='m-0'>PUBLISHED</h4>
+                        </div>
+                    }
+                    {
+                        !location.isDraft && !location.isPublished &&
+                        <div className="draftBadge position-absolute badge bg-secondary bg-opacity-75">
+                            <h4 className='m-0'>HIDDEN</h4>
                         </div>
                     }
                     <div className="card-header themeBackground">
@@ -47,18 +62,36 @@ const LocationCard = ({location}) => {
                     </div>
                     <div className="card-footer cardFooterBackground d-flex justify-content-between">
                         <Link className='btn btn-primary' to={`/location/${location._id}`}>Manage</Link>
-                        <Dropdown isOpen={dropdownOpen} toggle={toggle}>
+                        <Dropdown isOpen={dropdownOpen} toggle={toggle} direction='left'>
                             <DropdownToggle tag='span'>
                                 <button className="btn">
                                     <i className="fas fa-ellipsis-v"></i>
                                 </button>
                             </DropdownToggle>
                             <DropdownMenu>
-                                <DropdownItem>View</DropdownItem>
-                                <DropdownItem>Edit</DropdownItem>
-                                <DropdownItem>Hide Location</DropdownItem>
+                                <DropdownItem className='p-0 viewLocationDropdownItem' disabled={!location.isPublished}>
+                                    <a
+                                        className='text-decoration-none d-block py-1 px-3'
+                                        href={`https://contractorsgarage.com/location/${location.slug}`}
+                                        target='_blank'
+                                    >
+                                        <i className="fas fa-external-link-alt text-primary"></i>&nbsp;
+                                        View
+                                    </a>
+                                </DropdownItem>
+                                <DropdownItem onClick={props.onEdit}>
+                                    <i className="fas fa-pencil-alt text-success"></i>&nbsp;
+                                    Edit
+                                </DropdownItem>
+                                <DropdownItem onClick={props.onHide} disabled={!location.isPublished && !location.isDraft || location.isDraft}>
+                                    <i className="fas fa-eye-slash"></i>&nbsp;
+                                    Hide Location
+                                </DropdownItem>
                                 <DropdownItem divider/>
-                                <DropdownItem>Delete</DropdownItem>
+                                <DropdownItem className='text-danger' onClick={props.onDelete}>
+                                    <i className="fas fa-trash-alt"></i>&nbsp;
+                                    Delete
+                                </DropdownItem>
                             </DropdownMenu>
                         </Dropdown>
                     </div>

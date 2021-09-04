@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { Redirect, useHistory } from 'react-router-dom';
 import LocationCard from '../../components/locationCard/LocationCard';
 import { AppContext } from '../../context/Store';
 import { API } from '../../util/API';
@@ -11,15 +11,45 @@ const Locations = () => {
     const [locations, setLocations] = useState([]);
 
     useEffect(() => {
+        loadLocations();
+    }, []);
+    
+    const loadLocations = () => {
         API.getLocations((res, err) => {
             if (res && res.status === 200) {
                 setLocations(res.data);
             }
         });
-    }, []);
+    }
 
     const handleNewLocation = () => {
         history.push('/location/new');
+    }
+
+    const handleHide = id => {
+        API.hideLocation(id, (res, err) => {
+            if (res && res.status === 200) {
+                console.log('success');
+                loadLocations();
+            }
+            else if (err) {
+                console.log(err);
+            }
+        });
+    }
+
+    const handleDelete = id => {
+        if (window.confirm('Are you sure you want to delete this location? This action cannot be reversed.')) {
+            API.deleteLocation(id, (res, err) => {
+                if (res && res.status === 200) {
+                    console.log('success');
+                    loadLocations();
+                }
+                else if (err) {
+                    console.log(err);
+                }
+            });
+        }
     }
 
     return (
@@ -31,7 +61,7 @@ const Locations = () => {
                     <div className="card p-4">
                         <h4>Create New Location</h4>
                         {
-                            (state.currentUser && state.currentUser.isAdmin) || (state.currentUser && state.currentUser.maxLocationAllowance > locations.length)
+                            (state.currentUser && state.currentUser.isAdmin) || (state.currentUser && state.currentUser.maxLocationAllowance > locations.filter(location => location.isPublished).length)
                             ?
                             <>
                                 <p>Create a new location. You will be able to first create a draft and preview what it will look like before publishing.</p>
@@ -64,7 +94,12 @@ const Locations = () => {
                             {
                                 locations.map(location => (
                                     <div className="col-12 col-md-6 col-xxl-4 my-2" key={location._id}>
-                                        <LocationCard location={location}/>
+                                        <LocationCard
+                                            location={location}
+                                            onEdit={() => history.push(`/location/${location._id}`)}
+                                            onHide={() => handleHide(location._id)}
+                                            onDelete={() => handleDelete(location._id)}
+                                        />
                                     </div>
                                 ))
                             }
