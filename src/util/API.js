@@ -82,6 +82,24 @@ export const API = {
     getAllUsers: (cb) => {
         GET('/portal/user/get-all-users', cb, null, true);
     },
+    /**
+     * Updates the user record that matches the given id with the given data.
+     * @param {String | Number} id Id of the user to update.
+     * @param {Object} data Request object containing the fields to update on the user record.
+     * @param {Function} cb Callback function that returns response or error of the server request.
+     */
+    updateUser: (id, data, cb) => {
+        PUT(`/portal/user/${id}`, data, cb, {type: TOAST_TYPES.SUCCESS, message: 'User data successfully updated!'});
+    },
+    /**
+     * Updates the password for the given user id with the given data.
+     * @param {String | Number} id Id of the user to update.
+     * @param {Object} data Request object containing the password update information.
+     * @param {Function} cb Callback function that returns response or error of the server request.
+     */
+    changePassword: (id, data, cb) => {
+        PUT(`/portal/user/change-password/${id}`, data, cb, {type: TOAST_TYPES.SUCCESS, message: 'Password updated successfully!'});
+    },
     /*
     *          !!##########################!!
     *          !!                          !!

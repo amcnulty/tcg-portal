@@ -24,24 +24,32 @@ const Locations = () => {
                     if (state.currentUser && state.currentUser.isAdmin) {
                         const locationData = res.data;
                         locationData.sort((a, b) => {
-                            if (a.createdBy.username === state.currentUser.username) return -1;
+                            if (a.createdBy && b.createdBy) {
+                                if (a.createdBy.username === state.currentUser.username) return -1;
+                                else {
+                                    return a.createdBy.username[0] < b.createdBy.username[0] ? -1 : 1;
+                                }
+                            }
                             else {
-                                return a.createdBy.username[0] < b.createdBy.username[0] ? -1 : 1;
+                                return -1;
                             }
                         });
                         setLocations(locationData);
+                        const filteredLocationData = locationData.filter(location => !!location.createdBy);
+                        const deletedUsersLocations = locationData.filter(location => !location.createdBy);
                         const sortedLocations = [];
                         const usernameIndexMap = {};
-                        for (let i = 0; i < locationData.length; i++) {
-                            if (usernameIndexMap[locationData[i].createdBy.username] !== undefined) {
-                                sortedLocations[usernameIndexMap[locationData[i].createdBy.username]].push(locationData[i]);
+                        for (let i = 0; i < filteredLocationData.length; i++) {
+                            if (usernameIndexMap[filteredLocationData[i].createdBy.username] !== undefined) {
+                                sortedLocations[usernameIndexMap[filteredLocationData[i].createdBy.username]].push(filteredLocationData[i]);
                             }
                             else {
-                                usernameIndexMap[locationData[i].createdBy.username] = sortedLocations.length;
+                                usernameIndexMap[filteredLocationData[i].createdBy.username] = sortedLocations.length;
                                 sortedLocations[sortedLocations.length] = [];
-                                sortedLocations[usernameIndexMap[locationData[i].createdBy.username]].push(locationData[i]);
+                                sortedLocations[usernameIndexMap[filteredLocationData[i].createdBy.username]].push(filteredLocationData[i]);
                             }
                         }
+                        sortedLocations.push(deletedUsersLocations);
                         setSortedLocations(sortedLocations);
                     }
                     else {
@@ -123,7 +131,15 @@ const Locations = () => {
                         ?
                             sortedLocations.map((locationsByUser, index) => (
                                 <div className='row mb-5 pb-5' key={index}>
-                                    <h4>{locationsByUser[0].createdBy.username === state.currentUser.username ? 'Your Locations' : `${locationsByUser[0].createdBy.username} Locations (${locationsByUser[0].createdBy.firstName} ${locationsByUser[0].createdBy.lastName})`}</h4>
+                                    <h4>
+                                        {
+                                            locationsByUser[0].createdBy
+                                            ?
+                                            locationsByUser[0].createdBy.username === state.currentUser.username ? 'Your Locations' : `${locationsByUser[0].createdBy.username} Locations (${locationsByUser[0].createdBy.firstName} ${locationsByUser[0].createdBy.lastName})`
+                                            :
+                                            '[deleted user]'
+                                        }
+                                    </h4>
                                     {
                                         locationsByUser.map(location => (
                                             <div className="col-12 col-md-6 col-xxl-4 my-2" key={location._id}>
