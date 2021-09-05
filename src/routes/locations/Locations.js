@@ -49,7 +49,9 @@ const Locations = () => {
                                 sortedLocations[usernameIndexMap[filteredLocationData[i].createdBy.username]].push(filteredLocationData[i]);
                             }
                         }
-                        sortedLocations.push(deletedUsersLocations);
+                        if (deletedUsersLocations.length > 0) {
+                            sortedLocations.push(deletedUsersLocations);
+                        }
                         setSortedLocations(sortedLocations);
                     }
                     else {
