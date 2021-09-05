@@ -1,9 +1,11 @@
-import { DELETE_USER, OPEN_PREVIEW, RESET_PREVIEW, SET_BANNER_IMAGE_PENDING, SET_DETAIL_PAGE_IMAGES_PENDING, SET_TABVIEW, SET_THUMBNAIL_IMAGE_PENDING, SET_USER, UPDATE_PREVIEW } from "./ActionTypes"
+import { DELETE_USER, OPEN_PREVIEW, RESET_PREVIEW, SET_BANNER_IMAGE_PENDING, SET_DETAIL_PAGE_IMAGES_PENDING, SET_TABVIEW, SET_THUMBNAIL_IMAGE_PENDING, SET_USER, SET_USERS, UPDATE_PREVIEW } from "./ActionTypes"
 
 const Reducer = (state, action) => {
     switch (action.type) {
         case SET_USER:
             return {...state, currentUser: action.payload};
+        case SET_USERS:
+            return {...state, allUsers: action.payload};
         case DELETE_USER:
             return {...state, currentUser: null};
         case SET_TABVIEW:

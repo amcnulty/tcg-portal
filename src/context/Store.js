@@ -4,6 +4,7 @@ import Reducer from './Reducer';
 
 const initialState = {
     currentUser: null,
+    allUsers: null,
     tabView: TAB_GENERAL,
     previewLocation: {},
     openPreview: false,

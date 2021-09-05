@@ -11,6 +11,7 @@ const MobileHeader = () => {
     const [isOpen, setIsOpen] = useState(false);
     const location = useLocation();
     const history = useHistory();
+    // eslint-disable-next-line no-unused-vars
     const [state, dispatch] = useContext(AppContext);
     
     const handleLogout = () => {

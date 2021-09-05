@@ -1,25 +1,55 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Redirect, useHistory } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import LocationCard from '../../components/locationCard/LocationCard';
 import { AppContext } from '../../context/Store';
 import { API } from '../../util/API';
 import './Locations.sass';
 
 const Locations = () => {
+    // eslint-disable-next-line no-unused-vars
     const [state, dispatch] = useContext(AppContext);
     const history = useHistory();
     const [locations, setLocations] = useState([]);
+    const [sortedLocations, setSortedLocations] = useState([]);
 
     useEffect(() => {
         loadLocations();
-    }, []);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [state.currentUser]);
     
     const loadLocations = () => {
-        API.getLocations((res, err) => {
-            if (res && res.status === 200) {
-                setLocations(res.data);
-            }
-        });
+        if (state.currentUser) {
+            API.getLocations((res, err) => {
+                if (res && res.status === 200) {
+                    if (state.currentUser && state.currentUser.isAdmin) {
+                        const locationData = res.data;
+                        locationData.sort((a, b) => {
+                            if (a.createdBy.username === state.currentUser.username) return -1;
+                            else {
+                                return a.createdBy.username[0] < b.createdBy.username[0] ? -1 : 1;
+                            }
+                        });
+                        setLocations(locationData);
+                        const sortedLocations = [];
+                        const usernameIndexMap = {};
+                        for (let i = 0; i < locationData.length; i++) {
+                            if (usernameIndexMap[locationData[i].createdBy.username] !== undefined) {
+                                sortedLocations[usernameIndexMap[locationData[i].createdBy.username]].push(locationData[i]);
+                            }
+                            else {
+                                usernameIndexMap[locationData[i].createdBy.username] = sortedLocations.length;
+                                sortedLocations[sortedLocations.length] = [];
+                                sortedLocations[usernameIndexMap[locationData[i].createdBy.username]].push(locationData[i]);
+                            }
+                        }
+                        setSortedLocations(sortedLocations);
+                    }
+                    else {
+                        setLocations(res.data);
+                    }
+                }
+            });
+        }
     }
 
     const handleNewLocation = () => {
@@ -79,7 +109,7 @@ const Locations = () => {
                                     You have reached your maximum location allowance of <b>{state.currentUser && state.currentUser.maxLocationAllowance}</b>!
                                 </p>
                                 <p>
-                                    Please contact your administrator to request an increase in your max location allowance. For more information about listing with Contractors Garage visit the <a href='https://www.contractorsgarage.com/development-services' target='_blank'>List With Us</a> page.
+                                    Please contact your administrator to request an increase in your max location allowance. For more information about listing with Contractors Garage visit the <a href='https://www.contractorsgarage.com/development-services' target='_blank' rel="noopener noreferrer">List With Us</a> page.
                                 </p>
                             </>
                         }
@@ -89,6 +119,26 @@ const Locations = () => {
                     {
                         locations && locations.length > 0
                         ?
+                        state.currentUser && state.currentUser.isAdmin
+                        ?
+                            sortedLocations.map((locationsByUser, index) => (
+                                <div className='row mb-5 pb-5' key={index}>
+                                    <h4>{locationsByUser[0].createdBy.username === state.currentUser.username ? 'Your Locations' : `${locationsByUser[0].createdBy.username} Locations (${locationsByUser[0].createdBy.firstName} ${locationsByUser[0].createdBy.lastName})`}</h4>
+                                    {
+                                        locationsByUser.map(location => (
+                                            <div className="col-12 col-md-6 col-xxl-4 my-2" key={location._id}>
+                                                <LocationCard
+                                                    location={location}
+                                                    onEdit={() => history.push(`/location/${location._id}`)}
+                                                    onHide={() => handleHide(location._id)}
+                                                    onDelete={() => handleDelete(location._id)}
+                                                />
+                                            </div>
+                                        ))
+                                    }
+                                </div>
+                            ))
+                        :
                         <>
                             <h4>Your Locations</h4>
                             {

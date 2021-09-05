@@ -27,6 +27,7 @@ const PrivateRoute = ({ children, ...rest }) => {
         else {
             setRenderChildren(children);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [rest.path]);
 
     return (

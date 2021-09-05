@@ -74,6 +74,7 @@ const LocationCard = (props) => {
                                         className='text-decoration-none d-block py-1 px-3'
                                         href={`https://contractorsgarage.com/location/${location.slug}`}
                                         target='_blank'
+                                        rel="noopener noreferrer"
                                     >
                                         <i className="fas fa-external-link-alt text-primary"></i>&nbsp;
                                         View
@@ -83,7 +84,7 @@ const LocationCard = (props) => {
                                     <i className="fas fa-pencil-alt text-success"></i>&nbsp;
                                     Edit
                                 </DropdownItem>
-                                <DropdownItem onClick={props.onHide} disabled={!location.isPublished && !location.isDraft || location.isDraft}>
+                                <DropdownItem onClick={props.onHide} disabled={(!location.isPublished && !location.isDraft) || location.isDraft}>
                                     <i className="fas fa-eye-slash"></i>&nbsp;
                                     Hide Location
                                 </DropdownItem>

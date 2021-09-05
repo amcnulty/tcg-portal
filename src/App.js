@@ -1,5 +1,5 @@
 import './App.sass';
-import { HashRouter, Route, Switch, Redirect, useLocation } from 'react-router-dom';
+import { HashRouter, Route, Switch, Redirect } from 'react-router-dom';
 import Login from './routes/login/Login';
 import Dashboard from './routes/dashboard/Dashboard';
 import NotFound from './routes/NotFound/NotFound';

@@ -1,4 +1,5 @@
 export const SET_USER = 'SET_USER';
+export const SET_USERS = 'SET_USERS';
 export const DELETE_USER = 'DELETE_USER';
 export const SET_TABVIEW = 'SET_TABVIEW';
 export const UPDATE_PREVIEW = 'UPDATE_PREVIEW';

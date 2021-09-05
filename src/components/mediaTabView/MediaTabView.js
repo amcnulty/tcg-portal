@@ -38,6 +38,7 @@ const MediaTabView = ({location}) => {
      */
     useEffect(() => {
         updatePreview();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [detailPageImages, bannerImage, isPublished]);
 
     useEffect(() => {
@@ -48,6 +49,7 @@ const MediaTabView = ({location}) => {
         setDetailPageImages(locationWithChanges.detailPageImages ? locationWithChanges.detailPageImages : '');
         setBannerImage(locationWithChanges.bannerImage ? locationWithChanges.bannerImage : undefined);
         setIsPublished(locationWithChanges.isPublished ? locationWithChanges.isPublished: null);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [location]);
     
     const handleFormSubmit = (e, publish) => {
@@ -267,6 +269,7 @@ const MediaTabView = ({location}) => {
                 toggleCaptionModal();
             })
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const onDropRejected = event => {
@@ -416,7 +419,7 @@ const MediaTabView = ({location}) => {
                             </div>
                         </div>
                         {
-                            (state.detailPageImages_pending && state.detailPageImages_pending.length > 0 || state.bannerImage_pending) &&
+                            ((state.detailPageImages_pending && state.detailPageImages_pending.length > 0) || state.bannerImage_pending) &&
                             <>
                                 <h5 className="mt-5">Images Pending Save</h5>
                                 <p>The following images will be uploaded once the location is saved with the <b>Save</b> button below. Banner images uploaded here will replace any existing banner image shown below.</p>

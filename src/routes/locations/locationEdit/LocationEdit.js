@@ -42,6 +42,7 @@ const LocationEdit = () => {
             }, 1000);
             dispatch({type: SET_TABVIEW, payload: TAB_GENERAL});
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (

@@ -39,6 +39,7 @@ const GeneralTabView = ({location}) => {
      */
     useEffect(() => {
         updatePreview();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [name, slug, addressFirstLine, addressSecondLine, coordinatesFromMap, lat, long, shortDescription, longDescription, currentFeature, features, contactName, contactPhone, contactEmail, isPublished]);
 
     useEffect(() => {
@@ -59,12 +60,14 @@ const GeneralTabView = ({location}) => {
         setContactPhone(locationWithChanges.contactPhone ? locationWithChanges.contactPhone : '');
         setContactEmail(locationWithChanges.contactEmail ? locationWithChanges.contactEmail : '');
         setIsPublished(locationWithChanges.isPublished ? locationWithChanges.isPublished: null);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [location]);
 
     const handleFormSubmit = (e, publish) => {
         if (!e.target.checkValidity()) {
             e.preventDefault();
             e.stopPropagation();
+            HELPERS.showToast(TOAST_TYPES.WARNING, 'Unable to submit form! One or more fields are invalid.');
         }
         else {
             e.preventDefault();
@@ -202,7 +205,7 @@ const GeneralTabView = ({location}) => {
                             <div className="d-flex flex-column my-4">
                                 <p>View this location on the live site.</p>
                                 <span>
-                                    <a className='btn btn-outline-primary' href={`https://contractorsgarage.com/location/${slug}`} target='_blank'>View Location &nbsp; <i className="fas fa-external-link-alt"></i></a>
+                                    <a className='btn btn-outline-primary' href={`https://contractorsgarage.com/location/${slug}`} target='_blank' rel="noopener noreferrer">View Location &nbsp; <i className="fas fa-external-link-alt"></i></a>
                                 </span>
                             </div>
                         }

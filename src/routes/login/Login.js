@@ -13,6 +13,7 @@ const Login = () => {
   ] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  // eslint-disable-next-line no-unused-vars
   const [state, dispatch] = useContext(AppContext);
 
   const { state: locationState } = useLocation();

@@ -23,6 +23,7 @@ const ThumbnailTabView = ({location}) => {
      */
     useEffect(() => {
         updatePreview();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [thumbnailImage, isPublished]);
 
     useEffect(() => {
@@ -32,6 +33,7 @@ const ThumbnailTabView = ({location}) => {
         };
         setThumbnailImage(locationWithChanges.thumbnailImage ? locationWithChanges.thumbnailImage : undefined);
         setIsPublished(locationWithChanges.isPublished ? locationWithChanges.isPublished: null);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [location]);
 
     const handleFormSubmit = (e, publish) => {
@@ -180,6 +182,7 @@ const ThumbnailTabView = ({location}) => {
                 });
             })
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const onDropRejected = event => {

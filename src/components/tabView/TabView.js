@@ -24,6 +24,7 @@ const TabView = props => {
                 }
             });
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [state.openPreview]);
     
     const togglePreviewModal = () => setPreviewModal(!previewModal);
@@ -98,7 +99,7 @@ const TabView = props => {
                 <ModalHeader>Location Preview Generated</ModalHeader>
                 <ModalBody>
                     <p>A preview has been generated from your data for this location. The link below will open the preview in a new tab. <b>This link will expire in 30 minutes.</b></p>
-                    <a href={previewHref} target='_blank'>View Preview <i className="fas fa-external-link-alt"></i></a>
+                    <a href={previewHref} target='_blank' rel="noopener noreferrer">View Preview <i className="fas fa-external-link-alt"></i></a>
                 </ModalBody>
                 <ModalFooter>
                     <button className="btn btn-primary" onClick={togglePreviewModal}>Close</button>

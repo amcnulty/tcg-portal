@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import './CoordinatePicker.sass';
 
 function EventComponent(props) {
@@ -24,6 +24,7 @@ const CoordinatePicker = (props) => {
         if (markerLocation) {
             props.onCoordinateSelect(markerLocation);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [markerLocation]);
 
     return (

@@ -68,6 +68,7 @@ const UnitTabView = ({location}) => {
      */
     useEffect(() => {
         updatePreview();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [unitSummary, units, extras, isPublished]);
 
     useEffect(() => {
@@ -79,12 +80,14 @@ const UnitTabView = ({location}) => {
         setUnits(locationWithChanges.units ? locationWithChanges.units : '');
         setExtras(locationWithChanges.extras ? locationWithChanges.extras : '');
         setIsPublished(locationWithChanges.isPublished ? locationWithChanges.isPublished: null);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [location]);
 
     const handleFormSubmit = (e, publish) => {
         if (!e.target.checkValidity()) {
             e.preventDefault();
             e.stopPropagation();
+            HELPERS.showToast(TOAST_TYPES.WARNING, 'Unable to submit form! One or more fields are invalid.');
         }
         else {
             e.preventDefault();

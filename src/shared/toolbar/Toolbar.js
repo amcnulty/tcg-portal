@@ -51,6 +51,7 @@ const Toolbar = () => {
                         <hr/>
                         <ul className='list-unstyled'>
                             <li className='mt-2'>
+                                {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
                                 <a
                                     className={`text-decoration-none ${isTabActive(TAB_GENERAL)}`}
                                     href={void(0)}
@@ -60,6 +61,7 @@ const Toolbar = () => {
                                 </a>
                             </li>
                             <li className='mt-2'>
+                                {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
                                 <a
                                     className={`text-decoration-none ${isTabActive(TAB_THUMBNAIL)}`}
                                     href={void(0)}
@@ -69,6 +71,7 @@ const Toolbar = () => {
                                 </a>
                             </li>
                             <li className='mt-2'>
+                                {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
                                 <a
                                     className={`text-decoration-none ${isTabActive(TAB_UNIT)}`}
                                     href={void(0)}
@@ -78,6 +81,7 @@ const Toolbar = () => {
                                 </a>
                             </li>
                             <li className='mt-2'>
+                                {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
                                 <a
                                     className={`text-decoration-none ${isTabActive(TAB_MEDIA)}`}
                                     href={void(0)}
@@ -87,6 +91,7 @@ const Toolbar = () => {
                                 </a>
                             </li>
                             <li className='mt-2'>
+                                {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
                                 <a
                                     className={`text-decoration-none ${isTabActive(TAB_PAYMENT)}`}
                                     href={void(0)}
