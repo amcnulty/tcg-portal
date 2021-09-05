@@ -41,6 +41,13 @@ const Toolbar = () => {
                     <li className='mt-2'>
                         <Link className={`text-decoration-none ${isActive('/locations')}`} to='/locations'>Locations</Link>
                     </li>
+                    {
+                        ( state.currentUser && state.currentUser.isAdmin )
+                        &&
+                        <li className='mt-2'>
+                            <Link className={`text-decoration-none ${isActive('/users')}`} to='/users'>Users</Link>
+                        </li>
+                    }
                     <li className='mt-2'>
                         <Link className={`text-decoration-none ${isActive('/settings')}`} to='/settings'>Settings</Link>
                     </li>

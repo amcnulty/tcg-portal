@@ -1,11 +1,11 @@
 import React, { useContext, useEffect, useState } from 'react';
+import { SET_USER } from '../../context/ActionTypes';
 import { AppContext } from '../../context/Store';
 import { API } from '../../util/API';
 import { HELPERS, TOAST_TYPES } from '../../util/helpers';
 import './Settings.sass';
 
 const Settings = () => {
-    // eslint-disable-next-line no-unused-vars
     const [state, dispatch] = useContext(AppContext);
 
     // Basic info state
@@ -44,6 +44,7 @@ const Settings = () => {
             HELPERS.showToast(TOAST_TYPES.WARNING, 'Unable to submit form! One or more fields are invalid.');
         }
         else {
+            e.preventDefault();
             const request = {
                 firstName,
                 lastName,
@@ -52,6 +53,7 @@ const Settings = () => {
             API.updateUser(state.currentUser._id, request, (res, err) => {
                 if (res && res.status === 200) {
                     console.log('success');
+                    dispatch({type: SET_USER, payload: {...state.currentUser, ...request}});
                 }
                 else if (err) {
                     if (err.response && err.response.status === 400) {

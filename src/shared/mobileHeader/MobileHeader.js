@@ -43,6 +43,13 @@ const MobileHeader = () => {
                         <NavItem>
                             <NavLink onClick={toggle} tag={Link} to="/locations" className={isActive('/locations')}>Locations</NavLink>
                         </NavItem>
+                        {
+                            ( state.currentUser && state.currentUser.isAdmin )
+                            &&
+                            <NavItem>
+                                <NavLink onClick={toggle} tag={Link} to="/users" className={isActive('/users')}>Users</NavLink>
+                            </NavItem>
+                        }
                         <NavItem>
                             <NavLink onClick={toggle} tag={Link} to="/settings" className={isActive('/settings')}>Settings</NavLink>
                         </NavItem>

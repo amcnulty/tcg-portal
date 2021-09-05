@@ -100,6 +100,31 @@ export const API = {
     changePassword: (id, data, cb) => {
         PUT(`/portal/user/change-password/${id}`, data, cb, {type: TOAST_TYPES.SUCCESS, message: 'Password updated successfully!'});
     },
+    /**
+     * Creates a new user with the given data.
+     * @param {Object} data Request object containing the data for creating the new user.
+     * @param {Function} cb Callback function that returns response or error of the server request.
+     */
+    createUser: (data, cb) => {
+        POST('/portal/user/create', data, cb, {type: TOAST_TYPES.SUCCESS, message: 'User created successfully!'});
+    },
+    /**
+     * Deletes a user record with the given id.
+     * @param {String | Number} id Id of the user to delete.
+     * @param {Function} cb Callback function that returns response or error of the server request.
+     */
+    deleteUser: (id, cb) => {
+        DELETE(`/portal/user/${id}`, cb, {type: TOAST_TYPES.SUCCESS, message: 'User deleted Successfully!'});
+    },
+    /**
+     * Updates the max location allowance of the user with the given id to the value passed into the data object.
+     * @param {String | Number} id Id of the user to update.
+     * @param {Object} data Request object containing the data for updating the max location allowance.
+     * @param {Function} cb Callback function that returns response or error of the server request.
+     */
+    updateMaxAllowance: (id, data, cb) => {
+        PUT(`/portal/user/max-allowance/${id}`, data, cb, {type: TOAST_TYPES.SUCCESS, message: 'User Updated Successfully!'});
+    },
     /*
     *          !!##########################!!
     *          !!                          !!
