@@ -74,6 +74,7 @@ const Settings = () => {
             HELPERS.showToast(TOAST_TYPES.WARNING, 'Unable to submit form! One or more fields are invalid.');
         }
         else {
+            e.preventDefault();
             const request = {
                 password,
                 newPassword
