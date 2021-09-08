@@ -95,8 +95,8 @@ const Settings = () => {
         setWasValidated_password(true);
     }
 
-    const handleResetPasswordChange = e => {
-        if (e.target.value === password) {
+    const handleRepeatPasswordChange = e => {
+        if (e.target.value === newPassword) {
             e.target.setCustomValidity('');
             setRepeatPasswordErrorMessage();
         }
@@ -182,7 +182,7 @@ const Settings = () => {
                 <form onSubmit={handleFormSubmit_password} className={`needs-validation ${wasValidated_password ? 'was-validated' : ''}`} noValidate>
                     <h4 className='mt-5'>Change Password</h4>
                     <div className="d-flex flex-column my-4">
-                        <label className='form-label requiredField' htmlFor="password">Password</label>
+                        <label className='form-label requiredField' htmlFor="password">Current Password</label>
                         <input
                             id='password'
                             className='form-control'
@@ -198,28 +198,7 @@ const Settings = () => {
                                 ?
                                 passwordErrorMessage
                                 :
-                                'Password is a required field please enter a password above.'                            }
-                        </div>
-                    </div>
-                    <div className="d-flex flex-column my-4">
-                        <label className='form-label requiredField' htmlFor="repeatPassword">Confirm Password</label>
-                        <input
-                            id='repeatPassword'
-                            className='form-control'
-                            type="password"
-                            placeholder='Confirm Password'
-                            value={repeatPassword}
-                            onChange={handleResetPasswordChange}
-                            required
-                        />
-                        <div className="invalid-feedback fw-bold">
-                            {
-                                repeatPasswordErrorMessage
-                                ?
-                                repeatPasswordErrorMessage
-                                :
-                                'Must confirm old password in order to change your password.'
-                            }
+                                'Password is a required field please enter your current password above.'                            }
                         </div>
                     </div>
                     <div className="d-flex flex-column my-4">
@@ -239,7 +218,28 @@ const Settings = () => {
                                 ?
                                 newPasswordErrorMessage
                                 :
-                                'Password is a required field please enter a new password above.'
+                                'New Password is a required field please enter a new password above.'
+                            }
+                        </div>
+                    </div>
+                    <div className="d-flex flex-column my-4">
+                        <label className='form-label requiredField' htmlFor="repeatPassword">Confirm New Password</label>
+                        <input
+                            id='repeatPassword'
+                            className='form-control'
+                            type="password"
+                            placeholder='Confirm Password'
+                            value={repeatPassword}
+                            onChange={handleRepeatPasswordChange}
+                            required
+                        />
+                        <div className="invalid-feedback fw-bold">
+                            {
+                                repeatPasswordErrorMessage
+                                ?
+                                repeatPasswordErrorMessage
+                                :
+                                'Must confirm new password in order to continue.'
                             }
                         </div>
                     </div>
