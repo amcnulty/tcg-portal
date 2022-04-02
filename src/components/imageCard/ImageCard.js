@@ -10,7 +10,7 @@ const ImageCard = (props) => {
                         {
                             backgroundImage: "url(" + props.src + ")",
                             backgroundPosition: 'center',
-                            backgroundSize: 'cover',
+                            backgroundSize: 'contain',
                             backgroundRepeat: 'no-repeat',
                             minHeight: '250px'
                         }
@@ -18,12 +18,18 @@ const ImageCard = (props) => {
                 />
                 <p className='position-absolute bg-white'>{props.caption}</p>
                 <div className="card-footer d-flex flex-row justify-content-between bg-light">
-                    <button type='button' className="btn btn-link text-danger" onClick={props.onDelete}>
+                    <button type='button' className="btn btn-link text-danger" onClick={props.onDelete} title='Delete'>
                         <i className="fas fa-trash-alt"></i>
                     </button>
                     {
+                        props.onReorder &&
+                        <button type='button' className="btn btn-link text-secondary ms-auto" onClick={props.onReorder} title='Reorder'>
+                            <i className="fas fa-sort"></i>
+                        </button>
+                    }
+                    {
                         props.hideEdit ??
-                        <button type='button' className="btn btn-link text-secondary" onClick={props.onEdit}>
+                        <button type='button' className="btn btn-link text-secondary" onClick={props.onEdit} title='Edit'>
                             <i className="fas fa-pencil-alt"></i>
                         </button>
                     }

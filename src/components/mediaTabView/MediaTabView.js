@@ -26,11 +26,15 @@ const MediaTabView = ({location}) => {
     const [isEditing_pending, setIsEditing_pending] = useState(false);
     const [editingIndex_pending, setEditingIndex_pending] = useState(-1);
 
-    // Modal state
+    // Editing Modal state
     const [captionModal, setCaptionModal] = useState(false);
     const [captionModalPage, setCaptionModalPage] = useState(1);
     const [isEditing, setIsEditing] = useState(false);
     const [editingIndex, setEditingIndex] = useState(-1);
+
+    // Reorder Modal State
+    const [reorderModal, setReorderModal] = useState(false);
+    const [newOrderIndex, setNewOrderIndex] = useState(-1);
 
     const compress = new Compress();
     /**
@@ -290,7 +294,7 @@ const MediaTabView = ({location}) => {
         }
         setCaptionModal(!captionModal);
     }
-
+    
     const resetCaptionModal = () => {
         setCurrentCaption('');
         setIsEditing(false);
@@ -300,6 +304,18 @@ const MediaTabView = ({location}) => {
         setEditingIndex_pending(-1);
     }
 
+    const toggleReorderModal = () => {
+        if (reorderModal) {
+            resetReorderModal();
+        }
+        setReorderModal(!reorderModal);
+    }
+
+    const resetReorderModal = () => {
+        setEditingIndex(-1);
+        setNewOrderIndex(-1);
+    }
+    
     const handleBannerClick_modalPage = () => {
         const newBannerImage = {
             ...(currentImage && {file: currentImage}),
@@ -329,6 +345,12 @@ const MediaTabView = ({location}) => {
             newDetailPageImages.splice(index, 1);
             setDetailPageImages(newDetailPageImages);
         }
+    }
+
+    const handleReorder = index => {
+        setEditingIndex(index);
+        setNewOrderIndex(index);
+        toggleReorderModal();
     }
 
     const handleBanner_pendingDelete = () => {
@@ -375,6 +397,12 @@ const MediaTabView = ({location}) => {
         newDetailPageImages_pending.push(newDetailPageImage);
         dispatch({type: SET_DETAIL_PAGE_IMAGES_PENDING, payload: newDetailPageImages_pending});
         toggleCaptionModal();
+    }
+
+    const handleReorderFinalize = () => {
+        const item = detailPageImages.splice(editingIndex, 1)[0];
+        detailPageImages.splice(newOrderIndex, 0, item);
+        toggleReorderModal();
     }
 
     const handlePendingEdit = index => {
@@ -494,6 +522,7 @@ const MediaTabView = ({location}) => {
                                                 caption={image.alt}
                                                 onEdit={() => handleEdit(index)}
                                                 onDelete={() => handleDelete(index)}
+                                                onReorder={() => handleReorder(index)}
                                             />
                                         </div>
                                     ))
@@ -546,6 +575,49 @@ const MediaTabView = ({location}) => {
                         :
                         <button className="btn btn-primary" onClick={handleAddCaption}>Add</button>)
                     }
+                </ModalFooter>
+            </Modal>
+            <Modal isOpen={reorderModal} toggle={toggleReorderModal} centered size='lg'>
+                <ModalHeader>Reorder Image</ModalHeader>
+                <ModalBody>
+                    <p>
+                        Change the position of this image in the order of items in the image carousel.
+                    </p>
+                    <p>
+                        <b>Set First</b> and <b>Set Last</b> will move this image to the front or back respectively.
+                    </p>
+                    <p>
+                        <b>Move Forward</b> and <b>Move Back</b> will move this image one position forward or back.
+                    </p>
+                    <h5 className='text-center'>
+                        Current Image Position: <span className='text-success'>{newOrderIndex + 1}</span> / {detailPageImages && detailPageImages.length}
+                    </h5>
+                    <div className='text-center'>
+                        <button
+                            className="btn btn-outline-primary me-3" type='button'
+                            onClick={() => setNewOrderIndex(0)}
+                            disabled={newOrderIndex === 0}
+                        >Set First</button>
+                        <button
+                            className="btn btn-outline-primary me-3" type='button'
+                            onClick={() => setNewOrderIndex(newOrderIndex - 1)}
+                            disabled={newOrderIndex === 0}
+                        >Move Forward</button>
+                        <button
+                            className="btn btn-outline-primary me-3" type='button'
+                            onClick={() => setNewOrderIndex(newOrderIndex + 1)}
+                            disabled={newOrderIndex === (detailPageImages && detailPageImages.length) - 1}
+                        >Move Back</button>
+                        <button
+                            className="btn btn-outline-primary" type='button'
+                            onClick={() => setNewOrderIndex(detailPageImages.length - 1)}
+                            disabled={newOrderIndex === (detailPageImages && detailPageImages.length) - 1}
+                        >Set Last</button>
+                    </div>
+                </ModalBody>
+                <ModalFooter>
+                    <button className="btn" onClick={toggleReorderModal}>CANCEL</button>
+                    <button className="btn btn-primary" onClick={handleReorderFinalize}>OK</button>
                 </ModalFooter>
             </Modal>
         </div>
