@@ -1,7 +1,7 @@
 import axios from "axios"
 import { HELPERS, TOAST_TYPES } from "./helpers";
 
-const baseUrl = (process.env.NODE_ENV === 'production') ? 'https://contractorsgarage.com' : 'http://localhost:3005';
+const baseUrl = (process.env.NODE_ENV === 'production') ? 'https://www.contractorsgarage.com' : 'http://localhost:3005';
 const config = { withCredentials: true };
 
 const GET = (endpoint, cb, successToastData, suppressErrorToast) => {
