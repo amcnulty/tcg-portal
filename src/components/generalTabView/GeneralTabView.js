@@ -419,13 +419,12 @@ const GeneralTabView = ({location}) => {
                                 id='contactPhone'
                                 className='form-control'
                                 type="text"
-                                pattern='[\d]{3}-[\d]{3}-[\d]{4}|[\d]{10}'
-                                placeholder='Enter Contact Phone XXX-XXX-XXXX Format'
+                                placeholder='Enter Contact Phone'
                                 value={contactPhone}
                                 onChange={e => setContactPhone(e.target.value)}
                             />
                             <div className="invalid-feedback fw-bold">
-                                Phone number must contain only numbers or numbers separated with dashes, no spaces, letters or special characters allowed (other than -).
+                                This field is invalid, please enter text only.
                             </div>
                         </div>
                         <div className="d-flex flex-column my-4">
@@ -434,13 +433,13 @@ const GeneralTabView = ({location}) => {
                             <input
                                 id='contactEmail'
                                 className='form-control'
-                                type="email"
+                                type="text"
                                 placeholder='Enter Contact Email'
                                 value={contactEmail}
                                 onChange={e => setContactEmail(e.target.value)}
                             />
                             <div className="invalid-feedback fw-bold">
-                                Email address entered is not valid!
+                                This field is invalid, please enter text only.
                             </div>
                         </div>
                     </form>
