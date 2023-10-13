@@ -226,7 +226,37 @@ export const API = {
         })
         .then(cb)
         .catch(err => {
-            HELPERS.showToast(TOAST_TYPES.ERROR, 'Error uploading images to server!');
+            HELPERS.showToast(TOAST_TYPES.ERROR, err.response);
+            cb(null, err);
+        });
+    },
+    /*
+    *          !!##########################!!
+    *          !!                          !!
+    *          !!          Videos          !!
+    *          !!                          !!
+    *          !!##########################!!
+    */
+    uploadVideo: (file, cb) => {
+        axios.get(baseUrl + '/portal/image-upload-credentials', config)
+        .then(res => {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', res.data.VIDEO_UPLOAD_PRESET);
+            formData.append('api key', res.data.API_KEY);
+            formData.append('timestamp', (Date.now() / 1000) | 0);
+
+            return axios.post(
+                `https://api.cloudinary.com/v1_1/${res.data.CLOUD_NAME}/video/upload`,
+                formData,
+                {
+                    headers: { "X-Requested-With": "XMLHttpRequest" }
+                }
+            )
+        })
+        .then(cb)
+        .catch(err => {
+            HELPERS.showToast(TOAST_TYPES.ERROR, err.response);
             cb(null, err);
         });
     }

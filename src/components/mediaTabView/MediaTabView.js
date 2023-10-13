@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { TAB_PAYMENT, TAB_UNIT } from '../../shared/Constants';
+import { TAB_UNIT, TAB_VIDEO } from '../../shared/Constants';
 import { HELPERS, TOAST_TYPES } from '../../util/helpers';
 import TabView from '../tabView/TabView';
 import './MediaTabView.sass';
@@ -429,7 +429,7 @@ const MediaTabView = ({location}) => {
                 header={`Media Upload ${state.previewLocation.name ? '- ' + state.previewLocation.name : ''}`}
                 description='This section is for uploading image media which can have optional caption text that will be shown with the image.'
                 previousView={TAB_UNIT}
-                nextView={TAB_PAYMENT}
+                nextView={TAB_VIDEO}
                 formId='mediaForm'
                 isPublished={isPublished}
                 updatePreview={updatePreview}

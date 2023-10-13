@@ -18,3 +18,7 @@ export const TAB_PAYMENT = 'TAB_PAYMENT';
  * Media tab view used for image uploading.
  */
 export const TAB_MEDIA = 'TAB_MEDIA';
+/**
+ * Media tab view used for image uploading.
+ */
+export const TAB_VIDEO = 'TAB_VIDEO';

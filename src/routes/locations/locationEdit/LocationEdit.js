@@ -5,9 +5,10 @@ import MediaTabView from '../../../components/mediaTabView/MediaTabView';
 import PaymentTabView from '../../../components/paymentTabView/PaymentTabView';
 import ThumbnailTabView from '../../../components/thumbnailTabView/ThumbnailTabView';
 import UnitTabView from '../../../components/unitTabView/UnitTabView';
+import VideoTabView from '../../../components/videoTabView/VideoTabView';
 import { SET_BANNER_IMAGE_PENDING, SET_DETAIL_PAGE_IMAGES_PENDING, SET_TABVIEW, UPDATE_PREVIEW } from '../../../context/ActionTypes';
 import { AppContext } from '../../../context/Store';
-import { TAB_GENERAL, TAB_MEDIA, TAB_PAYMENT, TAB_THUMBNAIL, TAB_UNIT } from '../../../shared/Constants';
+import { TAB_GENERAL, TAB_MEDIA, TAB_PAYMENT, TAB_THUMBNAIL, TAB_UNIT, TAB_VIDEO } from '../../../shared/Constants';
 import { API } from '../../../util/API';
 
 const LocationEdit = () => {
@@ -62,6 +63,10 @@ const LocationEdit = () => {
             {
                 state.tabView === TAB_MEDIA &&
                 <MediaTabView location={location}/>
+            }
+            {
+                state.tabView === TAB_VIDEO &&
+                <VideoTabView location={location}/>
             }
             {
                 state.tabView === TAB_PAYMENT &&

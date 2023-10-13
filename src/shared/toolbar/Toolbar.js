@@ -4,7 +4,7 @@ import CompanyLogo from '../../components/companyLogo/CompanyLogo';
 import { API } from '../../util/API';
 import { AppContext } from '../../context/Store';
 import './Toolbar.sass';
-import { TAB_GENERAL, TAB_MEDIA, TAB_PAYMENT, TAB_THUMBNAIL, TAB_UNIT } from '../Constants';
+import { TAB_GENERAL, TAB_MEDIA, TAB_PAYMENT, TAB_THUMBNAIL, TAB_UNIT, TAB_VIDEO } from '../Constants';
 import { DELETE_USER, SET_TABVIEW } from '../../context/ActionTypes';
 import { HELPERS } from '../../util/helpers';
 
@@ -95,6 +95,16 @@ const Toolbar = () => {
                                     onClick={() => dispatch({type: SET_TABVIEW, payload: TAB_MEDIA})}
                                 >
                                     {HELPERS.getTabNameFromTabView(TAB_MEDIA)}
+                                </a>
+                            </li>
+                            <li className='mt-2'>
+                                {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+                                <a
+                                    className={`text-decoration-none ${isTabActive(TAB_VIDEO)}`}
+                                    href={void(0)}
+                                    onClick={() => dispatch({type: SET_TABVIEW, payload: TAB_VIDEO})}
+                                >
+                                    {HELPERS.getTabNameFromTabView(TAB_VIDEO)} <span className='badge text-bg-primary ms-2'>New!</span>
                                 </a>
                             </li>
                             <li className='mt-2'>

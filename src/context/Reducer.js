@@ -1,4 +1,4 @@
-import { DELETE_USER, OPEN_PREVIEW, RESET_PREVIEW, SET_BANNER_IMAGE_PENDING, SET_DETAIL_PAGE_IMAGES_PENDING, SET_TABVIEW, SET_THUMBNAIL_IMAGE_PENDING, SET_USER, SET_USERS, UPDATE_PREVIEW } from "./ActionTypes"
+import { DELETE_USER, OPEN_PREVIEW, RESET_PREVIEW, SET_BANNER_IMAGE_PENDING, SET_DETAIL_PAGE_IMAGES_PENDING, SET_TABVIEW, SET_THUMBNAIL_IMAGE_PENDING, SET_USER, SET_USERS, SET_VIDEO_PENDING, UPDATE_PREVIEW } from "./ActionTypes"
 
 const Reducer = (state, action) => {
     switch (action.type) {
@@ -22,6 +22,9 @@ const Reducer = (state, action) => {
             return {...state, bannerImage_pending: action.payload};
         case SET_THUMBNAIL_IMAGE_PENDING:
             return {...state, thumbnailImage_pending: action.payload};
+        case SET_VIDEO_PENDING:
+            return {...state, videos_pending: action.payload};
+            
         default:
             return state;
     }

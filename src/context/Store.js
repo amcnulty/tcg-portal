@@ -10,7 +10,8 @@ const initialState = {
     openPreview: false,
     detailPageImages_pending: undefined,
     bannerImage_pending: undefined,
-    thumbnailImage_pending: undefined
+    thumbnailImage_pending: undefined,
+    videos_pending: undefined
 }
 
 const Store = (props) => {

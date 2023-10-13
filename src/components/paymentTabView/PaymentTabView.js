@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { UPDATE_PREVIEW } from '../../context/ActionTypes';
 import { AppContext } from '../../context/Store';
-import { TAB_MEDIA } from '../../shared/Constants';
+import { TAB_VIDEO } from '../../shared/Constants';
 import { API } from '../../util/API';
 import { HELPERS, TOAST_TYPES } from '../../util/helpers';
 import TabView from '../tabView/TabView';
@@ -110,7 +110,7 @@ const PaymentTabView = ({location}) => {
             <TabView
                 header={`Payment Processing ${state.previewLocation.name ? '- ' + state.previewLocation.name : ''}`}
                 description='This section is for enabling payment processing with PayPal for this location. Optional fees can be set which will be added to each payment that is made.'
-                previousView={TAB_MEDIA}
+                previousView={TAB_VIDEO}
                 formId='paymentForm'
                 isPublished={isPublished}
                 updatePreview={updatePreview}

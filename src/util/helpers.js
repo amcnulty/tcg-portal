@@ -3,7 +3,8 @@ const tabViewMap = {
     TAB_THUMBNAIL: 'Thumbnail',
     TAB_UNIT: 'Unit / Pricing',
     TAB_PAYMENT: 'Payment',
-    TAB_MEDIA: 'Media'
+    TAB_MEDIA: 'Media',
+    TAB_VIDEO: 'Video'
 }
 
 export const TOAST_TYPES = {

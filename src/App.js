@@ -35,7 +35,7 @@ function App() {
   const showSuccessToast = (message) => toast.success(message);
   const showWarningToast = (message) => toast.warning(message);
   const showErrorToast = (error) => {
-    error && toast.error(`${error.status} ${error.statusText}: ${error.data}`);
+    error && toast.error(`${error.status} ${error.statusText}: ${JSON.stringify(error.data)}`);
   }
   
   return (
