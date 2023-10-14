@@ -16,11 +16,12 @@ const VideoTabView = ({ location }) => {
     // State for new video object being created before it is uploaded
     const [currentVideo, setCurrentVideo] = useState();
     const [currentPoster, setCurrentPoster] = useState();
+    const [isEditing_pending, setIsEditing_pending] = useState(false); // Flag for editing a pending video
+    const [editingIndex_pending, setEditingIndex_pending] = useState(-1);
 
     // Editing modal state
     const [showPosterModal, setShowPosterModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
-    const [isEditing_pending, setIsEditing_pending] = useState(false); // Flag for editing a pending video
 
     /**
      * Every time a field changes, update the preview, so when this tab is exited the preview retains its data.
@@ -72,6 +73,7 @@ const VideoTabView = ({ location }) => {
         setCurrentPoster(undefined);
         setIsEditing(false);
         setIsEditing_pending(false);
+        setEditingIndex_pending(-1);
     }, []);
 
     const togglePosterModal = useCallback(() => {
@@ -84,7 +86,11 @@ const VideoTabView = ({ location }) => {
     const onVideoDrop = useCallback(
         (acceptedFiles) => {
             if (acceptedFiles.length > 0) {
-                setCurrentVideo(acceptedFiles[0]);
+                // setCurrentVideo(acceptedFiles[0]);
+                setCurrentVideo({
+                    file: acceptedFiles[0],
+                    url: URL.createObjectURL(acceptedFiles[0])
+                });
                 togglePosterModal();
             }
         },
@@ -101,7 +107,15 @@ const VideoTabView = ({ location }) => {
 
     const onImageDrop = useCallback((acceptedFiles) => {
         if (acceptedFiles.length > 0) {
-            setCurrentPoster(acceptedFiles[0]);
+            // reset the poster to undefined then on next render set the poster.
+            // This allows the video element to actually update the poster.
+            setCurrentPoster();
+            requestAnimationFrame(() =>
+                setCurrentPoster({
+                    file: acceptedFiles[0],
+                    url: URL.createObjectURL(acceptedFiles[0])
+                })
+            );
         }
     }, []);
 
@@ -133,12 +147,33 @@ const VideoTabView = ({ location }) => {
         accept: 'image/jpeg, image/png'
     });
 
-    const handleUpdatePoster = () => {};
+    const handleUpdatePoster = () => {
+        if (isEditing) {
+        } else if (isEditing_pending) {
+            const newVideo = {
+                video: currentVideo,
+                poster: {
+                    file: currentPoster?.file,
+                    url: currentPoster?.url
+                }
+            };
+            const newVideos_pending = [...state.videos_pending];
+            newVideos_pending.splice(editingIndex_pending, 1, newVideo);
+            dispatch({ type: SET_VIDEO_PENDING, payload: newVideos_pending });
+            togglePosterModal();
+        }
+    };
 
     const handleAddPoster = () => {
         const newVideo = {
-            file: currentVideo,
-            poster: currentPoster
+            video: {
+                file: currentVideo.file,
+                url: currentVideo.url
+            },
+            poster: {
+                file: currentPoster?.file,
+                url: currentPoster?.url
+            }
         };
         let newVideos_pending = [];
         if (state.videos_pending) {
@@ -155,16 +190,16 @@ const VideoTabView = ({ location }) => {
     const handlePendingEdit = (index) => {
         if (state.videos_pending[index]) {
             // setCurrentCaption(state.detailPageImages_pending[index].alt);
-            // setIsEditing_pending(true);
-            // setEditingIndex_pending(index);
-            // setCaptionModalPage(2);
-            // toggleCaptionModal();
+            setCurrentVideo(state.videos_pending[index].video);
+            setCurrentPoster(state.videos_pending[index].poster);
+            setIsEditing_pending(true);
+            setEditingIndex_pending(index);
+            togglePosterModal();
         }
     };
 
     const handlePendingDelete = (index) => {
         if (window.confirm('Are you sure you want to delete this video?')) {
-            console.log('here');
             const newVideos_pending = [...state.videos_pending];
             newVideos_pending.splice(index, 1);
             dispatch({ type: SET_VIDEO_PENDING, payload: newVideos_pending });
@@ -221,14 +256,8 @@ const VideoTabView = ({ location }) => {
                                                 key={index}
                                             >
                                                 <VideoCard
-                                                    src={URL.createObjectURL(
-                                                        video.file
-                                                    )}
-                                                    {...(video.poster && {
-                                                        poster: URL.createObjectURL(
-                                                            video.poster
-                                                        )
-                                                    })}
+                                                    src={video.video.url}
+                                                    poster={video?.poster?.url}
                                                     onEdit={() =>
                                                         handlePendingEdit(index)
                                                     }
@@ -262,7 +291,9 @@ const VideoTabView = ({ location }) => {
                 size='xl'
             >
                 <ModalHeader>
-                    {`${isEditing ? 'Edit' : 'Add'} Video Poster`}
+                    {`${
+                        isEditing || isEditing_pending ? 'Edit' : 'Add'
+                    } Video Poster`}
                 </ModalHeader>
                 <ModalBody>
                     {
@@ -298,14 +329,8 @@ const VideoTabView = ({ location }) => {
                                 ratio to match the video's dimensions.
                             </p>
                             <VideoCard
-                                src={
-                                    currentVideo &&
-                                    URL.createObjectURL(currentVideo)
-                                }
-                                poster={
-                                    currentPoster &&
-                                    URL.createObjectURL(currentPoster)
-                                }
+                                src={currentVideo?.url}
+                                poster={currentPoster?.url}
                                 {...(currentPoster && {
                                     onDelete: () => setCurrentPoster(undefined)
                                 })}

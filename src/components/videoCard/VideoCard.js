@@ -1,12 +1,33 @@
-import React from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ReactPlayer from 'react-player/file';
 
 const VideoCard = (props) => {
+    const [uniqueKey, setUniqueKey] = useState();
+    const posterRef = useRef(props.poster);
+
+    const generateUniqueKey = useCallback(() => {
+        const timestamp = new Date().getTime(); // Get a timestamp
+        const random = Math.random().toString(36).substring(7); // Generate a random string
+
+        // Combine the timestamp and random string to create a unique key
+        const uniqueKey = `${timestamp}-${random}`;
+
+        return uniqueKey;
+    }, []);
+
+    useEffect(() => {
+        if (props.poster !== posterRef.current) {
+            posterRef.current = props.poster;
+            setUniqueKey(generateUniqueKey());
+        }
+    }, [generateUniqueKey, props.poster]);
+
     return (
         <div className='VideoCard'>
             <div className='card'>
                 <div className='card-body'>
                     <ReactPlayer
+                        key={props.poster ? uniqueKey : 'withoutPoster'}
                         url={props.src}
                         controls
                         width='100%'
