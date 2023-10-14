@@ -237,22 +237,27 @@ export const API = {
     *          !!                          !!
     *          !!##########################!!
     */
-    uploadVideo: (file, cb) => {
+    uploadVideos: (files, cb) => {
+        const promiseArray = [];
         axios.get(baseUrl + '/portal/image-upload-credentials', config)
         .then(res => {
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('upload_preset', res.data.VIDEO_UPLOAD_PRESET);
-            formData.append('api key', res.data.API_KEY);
-            formData.append('timestamp', (Date.now() / 1000) | 0);
+            for (let i = 0; i < files.length; i++) {
+                const formData = new FormData();
+                formData.append('file', files[i]);
+                formData.append('upload_preset', res.data.VIDEO_UPLOAD_PRESET);
+                formData.append('api key', res.data.API_KEY);
+                formData.append('timestamp', (Date.now() / 1000) | 0);
 
-            return axios.post(
-                `https://api.cloudinary.com/v1_1/${res.data.CLOUD_NAME}/video/upload`,
-                formData,
-                {
-                    headers: { "X-Requested-With": "XMLHttpRequest" }
-                }
-            )
+                promiseArray.push(axios.post(
+                    `https://api.cloudinary.com/v1_1/${res.data.CLOUD_NAME}/video/upload`,
+                    formData,
+                    {
+                        headers: { "X-Requested-With": "XMLHttpRequest" }
+                    }
+                ));
+            }
+            
+            return Promise.all(promiseArray);
         })
         .then(cb)
         .catch(err => {

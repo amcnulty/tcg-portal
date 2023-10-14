@@ -8,6 +8,7 @@ import { HELPERS, TOAST_TYPES } from '../../util/helpers';
 import TabView from '../tabView/TabView';
 import VideoCard from '../videoCard/VideoCard';
 import './VideoTabView.sass';
+import { API } from '../../util/API';
 
 const VideoTabView = ({ location }) => {
     const [state, dispatch] = useContext(AppContext);
@@ -45,6 +46,67 @@ const VideoTabView = ({ location }) => {
     }, [location]);
 
     const handleFormSubmit = (e, publish) => {
+        if (state.previewLocation._id) {
+            // First update the location data.
+            // The server will be responsible for deleting any videos or poster images that are no longer in the new request.
+            const updateRequest = {
+                ...state.previewLocation,
+                ...(publish && { isPublished: true, isDraft: false })
+            };
+            API.updateLocation_hideToast(updateRequest, (res, err) => {
+                if (res && res.status === 200) {
+                    if (state.videos_pending) {
+                        const videoFiles = state.videos_pending.map(video => video.video.file);
+                        const imageFiles = state.videos_pending.filter(video => !!video.poster.file).map(video => video.poster.file);
+                        console.log('videoFiles :>> ', videoFiles);
+                        console.log('imageFiles :>> ', imageFiles);
+                        let videoResolver;
+                        let imageResolver;
+                        const videoLoader = new Promise((resolve, reject) => {
+                            videoResolver = resolve;
+                        });
+                        const imageLoader = new Promise((resolve, reject) => {
+                            imageResolver = resolve;
+                        })
+                        API.uploadVideos(videoFiles, (res, err) => {
+                            if (res) {
+                                videoResolver(res);
+                            } else if (err) {
+                                console.log(err);
+                            }
+                        });
+                        API.uploadImages(imageFiles, (res, err) => {
+                            if (res) {
+                                imageResolver(res);
+                            } else if (err) {
+                                console.log(err);
+                            }
+                        });
+                        Promise.all([videoLoader, imageLoader])
+                        .then((res) => {
+                            console.log('res :>> ', res);
+                        })
+                    } else {
+                        if (publish) {
+                            setIsPublished(true);
+                            HELPERS.showToast(
+                                TOAST_TYPES.SUCCESS,
+                                'Location Published!'
+                            );
+                        } else {
+                            HELPERS.showToast(
+                                TOAST_TYPES.SUCCESS,
+                                'Update Successful!'
+                            );
+                        }
+                    }
+                } else if (err) {
+                    console.log(err);
+                }
+            });
+        } else {
+            console.log('place for create');
+        }
         e.preventDefault();
     };
 
@@ -217,13 +279,13 @@ const VideoTabView = ({ location }) => {
                 description="This section allows you to upload videos for display on this location's page. Additionally, you have the option to assign a poster image, which will be presented to viewers before they begin playing the video."
                 previousView={TAB_MEDIA}
                 nextView={TAB_PAYMENT}
-                formId='mediaForm'
+                formId='videoForm'
                 isPublished={isPublished}
                 updatePreview={updatePreview}
                 onPublish={handlePublish}
             >
                 <div className='card editDetailCard p-4'>
-                    <form id='thumbnailForm' onSubmit={handleFormSubmit}>
+                    <form id='videoForm' onSubmit={handleFormSubmit}>
                         <div {...getVideoRootProps()} className='dropzone'>
                             <input {...getVideoInputProps()} />
                             <div className='d-flex flex-column align-items-center justify-content-around h-100 py-5 bg-light'>
