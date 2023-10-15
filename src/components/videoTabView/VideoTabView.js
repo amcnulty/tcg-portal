@@ -12,6 +12,9 @@ import { API } from '../../util/API';
 
 const VideoTabView = ({ location }) => {
     const [state, dispatch] = useContext(AppContext);
+
+    const [detailPageVideos, setDetailPageVideos] = useState();
+    const [showLoader, setShowLoader] = useState(false);
     const [isPublished, setIsPublished] = useState();
 
     // State for new video object being created before it is uploaded
@@ -30,13 +33,18 @@ const VideoTabView = ({ location }) => {
     useEffect(() => {
         updatePreview();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isPublished]);
+    }, [detailPageVideos, isPublished]);
 
     useEffect(() => {
         const locationWithChanges = {
             ...location,
             ...state.previewLocation
         };
+        setDetailPageVideos(
+            locationWithChanges.detailPageVideos
+                ? locationWithChanges.detailPageVideos
+                : undefined
+        );
         setIsPublished(
             locationWithChanges.isPublished
                 ? locationWithChanges.isPublished
@@ -46,7 +54,10 @@ const VideoTabView = ({ location }) => {
     }, [location]);
 
     const handleFormSubmit = (e, publish) => {
+        e.preventDefault();
         if (state.previewLocation._id) {
+            HELPERS.showToast(TOAST_TYPES.INFO, 'Video Upload Started');
+            setShowLoader(true);
             // First update the location data.
             // The server will be responsible for deleting any videos or poster images that are no longer in the new request.
             const updateRequest = {
@@ -56,10 +67,12 @@ const VideoTabView = ({ location }) => {
             API.updateLocation_hideToast(updateRequest, (res, err) => {
                 if (res && res.status === 200) {
                     if (state.videos_pending) {
-                        const videoFiles = state.videos_pending.map(video => video.video.file);
-                        const imageFiles = state.videos_pending.filter(video => !!video.poster.file).map(video => video.poster.file);
-                        console.log('videoFiles :>> ', videoFiles);
-                        console.log('imageFiles :>> ', imageFiles);
+                        const videoFiles = state.videos_pending.map(
+                            (video) => video.video.file
+                        );
+                        const imageFiles = state.videos_pending
+                            .filter((video) => !!video.poster.file)
+                            .map((video) => video.poster.file);
                         let videoResolver;
                         let imageResolver;
                         const videoLoader = new Promise((resolve, reject) => {
@@ -67,7 +80,7 @@ const VideoTabView = ({ location }) => {
                         });
                         const imageLoader = new Promise((resolve, reject) => {
                             imageResolver = resolve;
-                        })
+                        });
                         API.uploadVideos(videoFiles, (res, err) => {
                             if (res) {
                                 videoResolver(res);
@@ -82,10 +95,65 @@ const VideoTabView = ({ location }) => {
                                 console.log(err);
                             }
                         });
-                        Promise.all([videoLoader, imageLoader])
-                        .then((res) => {
-                            console.log('res :>> ', res);
-                        })
+                        Promise.all([videoLoader, imageLoader]).then(
+                            ([videoResponses, imageResponses]) => {
+                                const locationVideosRequest = {
+                                    _id: state.previewLocation._id,
+                                    detailPageVideos: []
+                                };
+                                for (
+                                    let i = 0;
+                                    i < state.videos_pending.length;
+                                    i++
+                                ) {
+                                    locationVideosRequest.detailPageVideos.push(
+                                        {
+                                            src: videoResponses[i].data
+                                                .secure_url,
+                                            ...(state.videos_pending[i].poster
+                                                .file && {
+                                                poster: imageResponses.shift()
+                                                    .data.secure_url
+                                            })
+                                        }
+                                    );
+                                }
+                                locationVideosRequest.detailPageVideos =
+                                    locationVideosRequest.detailPageVideos.concat(
+                                        detailPageVideos
+                                    );
+                                API.updateLocation_hideToast(
+                                    locationVideosRequest,
+                                    (res, err) => {
+                                        if (res && res.status === 200) {
+                                            if (publish) {
+                                                setIsPublished(true);
+                                                HELPERS.showToast(
+                                                    TOAST_TYPES.SUCCESS,
+                                                    'Location Published!'
+                                                );
+                                            } else {
+                                                HELPERS.showToast(
+                                                    TOAST_TYPES.SUCCESS,
+                                                    'Update Successful!'
+                                                );
+                                            }
+                                            setDetailPageVideos(
+                                                locationVideosRequest.detailPageVideos
+                                            );
+                                            setShowLoader(false);
+                                            dispatch({
+                                                type: SET_VIDEO_PENDING,
+                                                payload: undefined
+                                            });
+                                        } else if (err) {
+                                            console.log(err);
+                                            setShowLoader(false);
+                                        }
+                                    }
+                                );
+                            }
+                        );
                     } else {
                         if (publish) {
                             setIsPublished(true);
@@ -93,21 +161,23 @@ const VideoTabView = ({ location }) => {
                                 TOAST_TYPES.SUCCESS,
                                 'Location Published!'
                             );
+                            setShowLoader(false);
                         } else {
                             HELPERS.showToast(
                                 TOAST_TYPES.SUCCESS,
                                 'Update Successful!'
                             );
+                            setShowLoader(false);
                         }
                     }
                 } else if (err) {
                     console.log(err);
+                    setShowLoader(false);
                 }
             });
         } else {
             console.log('place for create');
         }
-        e.preventDefault();
     };
 
     /**
@@ -115,6 +185,7 @@ const VideoTabView = ({ location }) => {
      */
     const updatePreview = () => {
         const previewLocation = {
+            ...(detailPageVideos && { detailPageVideos }),
             ...(isPublished != null && { isPublished })
         };
         const payload = {
@@ -160,11 +231,14 @@ const VideoTabView = ({ location }) => {
     );
 
     const onVideoDropRejected = (event) => {
-        console.log(event);
-        HELPERS.showToast(
-            TOAST_TYPES.WARNING,
-            'Warning! Cannot upload file because it is not the correct file type! Video must be .mp4'
-        );
+        const message =
+            event[0]?.errors[0].code && event[0].errors[0].message
+                ? 'Warning! ' +
+                  event[0].errors[0].code +
+                  ' ' +
+                  event[0].errors[0].message
+                : 'Warning! Cannot upload file. Video must be .mp4 format and less than 100MB in size';
+        HELPERS.showToast(TOAST_TYPES.WARNING, message);
     };
 
     const onImageDrop = useCallback((acceptedFiles) => {
@@ -182,7 +256,6 @@ const VideoTabView = ({ location }) => {
     }, []);
 
     const onImageDropRejected = useCallback((event) => {
-        console.log(event);
         HELPERS.showToast(
             TOAST_TYPES.WARNING,
             'Warning! Cannot upload file because it is not the correct file type! Image must be .jpg or .png'
@@ -196,6 +269,7 @@ const VideoTabView = ({ location }) => {
         onDrop: onVideoDrop,
         onDropRejected: onVideoDropRejected,
         maxFiles: 1,
+        maxSize: 100000000,
         accept: 'video/mp4'
     });
 
@@ -208,6 +282,18 @@ const VideoTabView = ({ location }) => {
         maxFiles: 1,
         accept: 'image/jpeg, image/png'
     });
+
+    const handleEdit = (index) => {
+        console.log('index :>> ', index);
+    };
+
+    const handleDelete = (index) => {
+        console.log('index :>> ', index);
+    };
+
+    const handleReorder = (index) => {
+        console.log('index :>> ', index);
+    };
 
     const handleUpdatePoster = () => {
         if (isEditing) {
@@ -343,6 +429,41 @@ const VideoTabView = ({ location }) => {
                             and upload new ones using the upload tool provided
                             above.
                         </p>
+                        {!detailPageVideos ||
+                        detailPageVideos & (detailPageVideos.length === 0) ? (
+                            <p className='text-secondary pt-5'>
+                                Currently no location videos have been added.
+                                Upload videos with the upload tool above.
+                            </p>
+                        ) : (
+                            <div className='row'>
+                                {detailPageVideos.map((video, index) => (
+                                    <div
+                                        className='col-12 col-lg-6 mb-4'
+                                        key={index}
+                                    >
+                                        <VideoCard
+                                            src={video.src}
+                                            poster={video.poster}
+                                            onEdit={() => handleEdit(index)}
+                                            onDelete={() => handleDelete(index)}
+                                            onReorder={() =>
+                                                handleReorder(index)
+                                            }
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        {showLoader && (
+                            <div className='d-flex justify-content-center align-items-center'>
+                                <div className='spinner-border' role='status'>
+                                    <span className='visually-hidden'>
+                                        Loading...
+                                    </span>
+                                </div>
+                            </div>
+                        )}
                     </form>
                 </div>
             </TabView>
