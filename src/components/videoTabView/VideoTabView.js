@@ -1,4 +1,10 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, {
+    useCallback,
+    useContext,
+    useEffect,
+    useRef,
+    useState
+} from 'react';
 import { useDropzone } from 'react-dropzone';
 import { SET_VIDEO_PENDING, UPDATE_PREVIEW } from '../../context/ActionTypes';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
@@ -26,6 +32,10 @@ const VideoTabView = ({ location }) => {
     // Editing modal state
     const [showPosterModal, setShowPosterModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
+    const [editingIndex, setEditingIndex] = useState(-1);
+
+    // Ref for tracking which existing videos' poster have been updated
+    const updatedPostersToVideoIdMap = useRef({});
 
     /**
      * Every time a field changes, update the preview, so when this tab is exited the preview retains its data.
@@ -64,23 +74,50 @@ const VideoTabView = ({ location }) => {
                 ...state.previewLocation,
                 ...(publish && { isPublished: true, isDraft: false })
             };
+            const posterUpdateKeys = Object.keys(
+                updatedPostersToVideoIdMap.current
+            );
+            for (let i = 0; i < posterUpdateKeys.length; i++) {
+                updateRequest.detailPageVideos.find(
+                    (video) => video._id === posterUpdateKeys[i]
+                ).poster = undefined;
+            }
             API.updateLocation_hideToast(updateRequest, (res, err) => {
                 if (res && res.status === 200) {
-                    if (state.videos_pending) {
-                        const videoFiles = state.videos_pending.map(
-                            (video) => video.video.file
-                        );
+                    if (
+                        state.videos_pending ||
+                        Object.keys(updatedPostersToVideoIdMap.current).length >
+                            0
+                    ) {
+                        const videoFiles = state.videos_pending
+                            ? state.videos_pending.map(
+                                  (video) => video.video.file
+                              )
+                            : [];
                         const imageFiles = state.videos_pending
-                            .filter((video) => !!video.poster.file)
-                            .map((video) => video.poster.file);
+                            ? state.videos_pending
+                                  .filter((video) => !!video.poster.file)
+                                  .map((video) => video.poster.file)
+                            : [];
+                        // we might already have a variable that's tracking the list of video files
+                        const posterUpdateFiles = posterUpdateKeys.map(
+                            (key) => updatedPostersToVideoIdMap.current[key]
+                        );
                         let videoResolver;
                         let imageResolver;
+                        let posterUpdateResolver;
                         const videoLoader = new Promise((resolve, reject) => {
                             videoResolver = resolve;
                         });
                         const imageLoader = new Promise((resolve, reject) => {
                             imageResolver = resolve;
                         });
+                        // Add another loader for poster images on existing videos
+                        const posterImageLoader = new Promise(
+                            (resolve, reject) => {
+                                posterUpdateResolver = resolve;
+                            }
+                        );
                         API.uploadVideos(videoFiles, (res, err) => {
                             if (res) {
                                 videoResolver(res);
@@ -95,28 +132,60 @@ const VideoTabView = ({ location }) => {
                                 console.log(err);
                             }
                         });
-                        Promise.all([videoLoader, imageLoader]).then(
-                            ([videoResponses, imageResponses]) => {
+                        // Upload the updated poster image files
+                        API.uploadImages(posterUpdateFiles, (res, err) => {
+                            if (res) {
+                                posterUpdateResolver(res);
+                            } else if (err) {
+                                console.log(err);
+                            }
+                        });
+                        Promise.all([
+                            videoLoader,
+                            imageLoader,
+                            posterImageLoader
+                        ]).then(
+                            ([
+                                videoResponses,
+                                imageResponses,
+                                posterUpdateResponses
+                            ]) => {
                                 const locationVideosRequest = {
                                     _id: state.previewLocation._id,
                                     detailPageVideos: []
                                 };
+                                if (state.videos_pending) {
+                                    for (
+                                        let i = 0;
+                                        i < state.videos_pending.length;
+                                        i++
+                                    ) {
+                                        locationVideosRequest.detailPageVideos.push(
+                                            {
+                                                src: videoResponses[i].data
+                                                    .secure_url,
+                                                ...(state.videos_pending[i]
+                                                    .poster.file && {
+                                                    poster: imageResponses.shift()
+                                                        .data.secure_url
+                                                })
+                                            }
+                                        );
+                                    }
+                                }
+                                // Before doing this add the newly uploaded poster image to the matching existing detailPageVideo
                                 for (
                                     let i = 0;
-                                    i < state.videos_pending.length;
+                                    i < posterUpdateKeys.length;
                                     i++
                                 ) {
-                                    locationVideosRequest.detailPageVideos.push(
-                                        {
-                                            src: videoResponses[i].data
-                                                .secure_url,
-                                            ...(state.videos_pending[i].poster
-                                                .file && {
-                                                poster: imageResponses.shift()
-                                                    .data.secure_url
-                                            })
-                                        }
-                                    );
+                                    detailPageVideos.find(
+                                        (video) =>
+                                            video._id === posterUpdateKeys[i]
+                                    ).poster =
+                                        posterUpdateResponses[
+                                            i
+                                        ].data.secure_url;
                                 }
                                 locationVideosRequest.detailPageVideos =
                                     locationVideosRequest.detailPageVideos.concat(
@@ -205,6 +274,7 @@ const VideoTabView = ({ location }) => {
         setCurrentVideo(undefined);
         setCurrentPoster(undefined);
         setIsEditing(false);
+        setEditingIndex(-1);
         setIsEditing_pending(false);
         setEditingIndex_pending(-1);
     }, []);
@@ -284,11 +354,21 @@ const VideoTabView = ({ location }) => {
     });
 
     const handleEdit = (index) => {
-        console.log('index :>> ', index);
+        if (detailPageVideos[index]) {
+            setCurrentVideo({ url: detailPageVideos[index].src });
+            setCurrentPoster({ url: detailPageVideos[index].poster });
+            setIsEditing(true);
+            setEditingIndex(index);
+            togglePosterModal();
+        }
     };
 
     const handleDelete = (index) => {
-        console.log('index :>> ', index);
+        if (window.confirm('Are you sure you want to delete this video?')) {
+            const newDetailPageVideos = [...detailPageVideos];
+            newDetailPageVideos.splice(index, 1);
+            setDetailPageVideos(newDetailPageVideos);
+        }
     };
 
     const handleReorder = (index) => {
@@ -297,6 +377,24 @@ const VideoTabView = ({ location }) => {
 
     const handleUpdatePoster = () => {
         if (isEditing) {
+            if (currentPoster?.file) {
+                updatedPostersToVideoIdMap.current[
+                    detailPageVideos[editingIndex]._id
+                ] = currentPoster.file;
+            } else {
+                delete updatedPostersToVideoIdMap.current[
+                    detailPageVideos[editingIndex]._id
+                ];
+            }
+            const newVideo = {
+                _id: detailPageVideos[editingIndex]._id,
+                src: detailPageVideos[editingIndex].src,
+                poster: currentPoster?.url
+            };
+            const newDetialPageVideos = [...detailPageVideos];
+            newDetialPageVideos.splice(editingIndex, 1, newVideo);
+            setDetailPageVideos(newDetialPageVideos);
+            togglePosterModal();
         } else if (isEditing_pending) {
             const newVideo = {
                 video: currentVideo,
