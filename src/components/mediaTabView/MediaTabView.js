@@ -217,13 +217,9 @@ const MediaTabView = ({location}) => {
                         });
                     }
                     else {
-                        if (publish) {
-                            setIsPublished(true);
-                            HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Location Published!');
-                        }
-                        else {
-                            HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Update Successful!');
-                        }
+                        HELPERS.showToast(TOAST_TYPES.SUCCESS, 'Update Successful!');
+                        dispatch({type: UPDATE_PREVIEW, payload: res.data});
+                        history.push(`/location/${res.data._id}`);
                     }
                 }
                 else if (err) {
@@ -426,7 +422,7 @@ const MediaTabView = ({location}) => {
     return (
         <div className='MediaTabView'>
             <TabView
-                header={`Media Upload ${state.previewLocation.name ? '- ' + state.previewLocation.name : ''}`}
+                header={`Image Upload ${state.previewLocation.name ? '- ' + state.previewLocation.name : ''}`}
                 description='This section is for uploading image media which can have optional caption text that will be shown with the image.'
                 previousView={TAB_UNIT}
                 nextView={TAB_VIDEO}

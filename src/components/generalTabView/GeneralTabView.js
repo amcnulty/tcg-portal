@@ -132,7 +132,8 @@ const GeneralTabView = ({location}) => {
 
     const handleDeleteLocation = () => {
         if (window.confirm('Are you sure you want to delete this location? This action cannot be reversed.')) {
-            API.deleteLocation(state.previewLocation._id, (res, err) => {
+            const id = state.previewLocation?._id || locationId;
+            API.deleteLocation(id, (res, err) => {
                 if (res && res.status === 200) {
                     console.log('success');
                     history.push('/locations');

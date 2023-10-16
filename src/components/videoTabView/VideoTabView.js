@@ -15,9 +15,11 @@ import TabView from '../tabView/TabView';
 import VideoCard from '../videoCard/VideoCard';
 import './VideoTabView.sass';
 import { API } from '../../util/API';
+import { useHistory } from 'react-router-dom';
 
 const VideoTabView = ({ location }) => {
     const [state, dispatch] = useContext(AppContext);
+    const history = useHistory();
 
     const [detailPageVideos, setDetailPageVideos] = useState();
     const [showLoader, setShowLoader] = useState(false);
@@ -99,7 +101,6 @@ const VideoTabView = ({ location }) => {
                                   .filter((video) => !!video.poster.file)
                                   .map((video) => video.poster.file)
                             : [];
-                        // we might already have a variable that's tracking the list of video files
                         const posterUpdateFiles = posterUpdateKeys.map(
                             (key) => updatedPostersToVideoIdMap.current[key]
                         );
@@ -208,13 +209,15 @@ const VideoTabView = ({ location }) => {
                                                 );
                                             }
                                             setDetailPageVideos(
-                                                locationVideosRequest.detailPageVideos
+                                                res.data.detailPageVideos
                                             );
                                             setShowLoader(false);
                                             dispatch({
                                                 type: SET_VIDEO_PENDING,
                                                 payload: undefined
                                             });
+                                            updatedPostersToVideoIdMap.current =
+                                                {};
                                         } else if (err) {
                                             console.log(err);
                                             setShowLoader(false);
@@ -245,7 +248,113 @@ const VideoTabView = ({ location }) => {
                 }
             });
         } else {
-            console.log('place for create');
+            HELPERS.showToast(TOAST_TYPES.INFO, 'Video Upload Started');
+            setShowLoader(true);
+            API.createLocation(state.previewLocation, (res, err) => {
+                if (res && res.status === 200) {
+                    // Once location is saved if there are pending images upload to cloudinary.
+                    const idField = res.data._id;
+                    if (state.videos_pending) {
+                        const videoFiles = state.videos_pending
+                            ? state.videos_pending.map(
+                                  (video) => video.video.file
+                              )
+                            : [];
+                        const imageFiles = state.videos_pending
+                            ? state.videos_pending
+                                  .filter((video) => !!video.poster.file)
+                                  .map((video) => video.poster.file)
+                            : [];
+                        let videoResolver;
+                        let imageResolver;
+                        const videoLoader = new Promise((resolve, reject) => {
+                            videoResolver = resolve;
+                        });
+                        const imageLoader = new Promise((resolve, reject) => {
+                            imageResolver = resolve;
+                        });
+                        API.uploadVideos(videoFiles, (res, err) => {
+                            if (res) {
+                                videoResolver(res);
+                            } else if (err) {
+                                console.log(err);
+                            }
+                        });
+                        API.uploadImages(imageFiles, (res, err) => {
+                            if (res) {
+                                imageResolver(res);
+                            } else if (err) {
+                                console.log(err);
+                            }
+                        });
+                        Promise.all([videoLoader, imageLoader]).then(
+                            ([videoResponses, imageResponses]) => {
+                                const locationVideosRequest = {
+                                    _id: idField,
+                                    detailPageVideos: []
+                                };
+                                for (
+                                    let i = 0;
+                                    i < state.videos_pending.length;
+                                    i++
+                                ) {
+                                    locationVideosRequest.detailPageVideos.push(
+                                        {
+                                            src: videoResponses[i].data
+                                                .secure_url,
+                                            ...(state.videos_pending[i].poster
+                                                .file && {
+                                                poster: imageResponses.shift()
+                                                    .data.secure_url
+                                            })
+                                        }
+                                    );
+                                }
+                                API.updateLocation_hideToast(
+                                    locationVideosRequest,
+                                    (res, err) => {
+                                        if (res && res.status === 200) {
+                                            HELPERS.showToast(
+                                                TOAST_TYPES.SUCCESS,
+                                                'Saved as Draft!'
+                                            );
+                                            setDetailPageVideos(
+                                                res.data.detailPageVideos
+                                            );
+                                            setShowLoader(false);
+                                            dispatch({
+                                                type: SET_VIDEO_PENDING,
+                                                payload: undefined
+                                            });
+                                            dispatch({
+                                                type: UPDATE_PREVIEW,
+                                                payload: res.data
+                                            });
+                                            history.push(
+                                                `/location/${res.data._id}`
+                                            );
+                                        } else if (err) {
+                                            console.log(err);
+                                            setShowLoader(false);
+                                        }
+                                    }
+                                );
+                            }
+                        );
+                    } else {
+                        HELPERS.showToast(
+                            TOAST_TYPES.SUCCESS,
+                            'Saved as Draft!'
+                        );
+                        setShowLoader(false);
+                        dispatch({ type: UPDATE_PREVIEW, payload: res.data });
+                        history.push(`/location/${res.data._id}`);
+                    }
+                } else if (err) {
+                    console.log(err);
+                    setShowLoader(false);
+                }
+            });
         }
     };
 
@@ -545,9 +654,6 @@ const VideoTabView = ({ location }) => {
                                             poster={video.poster}
                                             onEdit={() => handleEdit(index)}
                                             onDelete={() => handleDelete(index)}
-                                            onReorder={() =>
-                                                handleReorder(index)
-                                            }
                                         />
                                     </div>
                                 ))}

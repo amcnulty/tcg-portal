@@ -3,7 +3,7 @@ const tabViewMap = {
     TAB_THUMBNAIL: 'Thumbnail',
     TAB_UNIT: 'Unit / Pricing',
     TAB_PAYMENT: 'Payment',
-    TAB_MEDIA: 'Media',
+    TAB_MEDIA: 'Image',
     TAB_VIDEO: 'Video'
 }
 
