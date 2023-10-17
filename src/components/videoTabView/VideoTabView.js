@@ -6,6 +6,7 @@ import React, {
     useState
 } from 'react';
 import { useDropzone } from 'react-dropzone';
+import Compress from 'compress.js';
 import { SET_VIDEO_PENDING, UPDATE_PREVIEW } from '../../context/ActionTypes';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 import { AppContext } from '../../context/Store';
@@ -38,6 +39,8 @@ const VideoTabView = ({ location }) => {
 
     // Ref for tracking which existing videos' poster have been updated
     const updatedPostersToVideoIdMap = useRef({});
+
+    const compress = new Compress();
 
     /**
      * Every time a field changes, update the preview, so when this tab is exited the preview retains its data.
@@ -398,7 +401,6 @@ const VideoTabView = ({ location }) => {
     const onVideoDrop = useCallback(
         (acceptedFiles) => {
             if (acceptedFiles.length > 0) {
-                // setCurrentVideo(acceptedFiles[0]);
                 setCurrentVideo({
                     file: acceptedFiles[0],
                     url: URL.createObjectURL(acceptedFiles[0])
@@ -422,15 +424,26 @@ const VideoTabView = ({ location }) => {
 
     const onImageDrop = useCallback((acceptedFiles) => {
         if (acceptedFiles.length > 0) {
-            // reset the poster to undefined then on next render set the poster.
-            // This allows the video element to actually update the poster.
-            setCurrentPoster();
-            requestAnimationFrame(() =>
-                setCurrentPoster({
-                    file: acceptedFiles[0],
-                    url: URL.createObjectURL(acceptedFiles[0])
+            compress
+                .compress(acceptedFiles, {
+                    size: 0.4,
+                    quality: 1,
+                    maxWidth: 1920,
+                    maxHeight: 1080
                 })
-            );
+                .then((data) => {
+                    const resizedimage = data[0];
+                    const resizedFile = Compress.convertBase64ToFile(resizedimage.data, resizedimage.ext);
+                    // reset the poster to undefined then on next render set the poster.
+                    // This allows the video element to actually update the poster.
+                    setCurrentPoster();
+                    requestAnimationFrame(() =>
+                        setCurrentPoster({
+                            file: resizedFile,
+                            url: URL.createObjectURL(resizedFile)
+                        })
+                    );
+                });
         }
     }, []);
 
@@ -544,7 +557,6 @@ const VideoTabView = ({ location }) => {
 
     const handlePendingEdit = (index) => {
         if (state.videos_pending[index]) {
-            // setCurrentCaption(state.detailPageImages_pending[index].alt);
             setCurrentVideo(state.videos_pending[index].video);
             setCurrentPoster(state.videos_pending[index].poster);
             setIsEditing_pending(true);
@@ -585,7 +597,7 @@ const VideoTabView = ({ location }) => {
                                 <i className='fas fa-cloud-upload-alt largeText'></i>
                                 <h3>Drop Files Here</h3>
                                 <p className='text-secondary fw-bold'>
-                                    File type must be .mp4
+                                    File type must be .mp4 - Max file size is 100MB
                                 </p>
                                 <button
                                     type='button'
