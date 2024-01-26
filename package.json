@@ -27,7 +27,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "postbuild": "rmdir /s /q docs && ncp build docs && echo portal.contractorsgarage.com > docs/CNAME",
+    "postbuild": "rmdir /s /q docs && ncp build docs && echo portal.contractorgarage.com > docs/CNAME",
     "deploy": "npm run build && git add . && git commit -m \"Build Commit\" && git push",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
