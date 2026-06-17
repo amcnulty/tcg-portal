@@ -352,24 +352,24 @@ const GeneralTabView = ({location}) => {
                         <div className="d-flex flex-column my-4">
                             <label className='form-label' htmlFor="features">Features</label>
                             <small className='text-secondary'>A list of features and services provided at this location. Each item will appear as an item in a bulleted list. Enter each item in the input below and press <b>Add Feature</b> to add it to the list. To remove an item from the list press the <b>&times;</b> next to the item.</small>
-                            <form onSubmit={e => e.preventDefault()}>
-                                <div className="input-group">
-                                    <input
-                                        id='features'
-                                        type="text"
-                                        className='form-control'
-                                        placeholder='Enter Feature'
-                                        value={currentFeature}
-                                        onChange={e => setCurrentFeature(e.target.value)}
-                                    />
-                                    <button
-                                        className="btn btn-outline-primary"
-                                        onClick={() => setFeatures([...features, currentFeature])}
-                                    >
-                                        Add Feature
-                                    </button>
-                                </div>
-                            </form>
+                            <div className="input-group">
+                                <input
+                                    id='features'
+                                    type="text"
+                                    className='form-control'
+                                    placeholder='Enter Feature'
+                                    value={currentFeature}
+                                    onChange={e => setCurrentFeature(e.target.value)}
+                                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); setFeatures([...features, currentFeature]); }}}
+                                />
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-primary"
+                                    onClick={() => setFeatures([...features, currentFeature])}
+                                >
+                                    Add Feature
+                                </button>
+                            </div>
                             {
                                 !features || (features && features.length === 0)
                                 ?
