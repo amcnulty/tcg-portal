@@ -3,6 +3,7 @@ import './LocationCard.sass';
 import defaultImage from './default.png';
 import { Dropdown, DropdownItem, DropdownMenu, DropdownToggle } from 'reactstrap';
 import { Link } from 'react-router-dom';
+import { HELPERS } from '../../util/helpers';
 
 const LocationCard = (props) => {
 
@@ -14,6 +15,9 @@ const LocationCard = (props) => {
 
     const imageSrc = location.thumbnailImage ? location.thumbnailImage.src : defaultImage;
 
+    // Derive the single display state from the location flags (see HELPERS.getLocationStatus).
+    const status = HELPERS.getLocationStatus(location);
+
     return (
         <div className='LocationCard'>
             {
@@ -21,24 +25,9 @@ const LocationCard = (props) => {
                 <div
                     className="card"
                 >
-                    {
-                        location.isDraft &&
-                        <div className="draftBadge position-absolute badge bg-black bg-opacity-75">
-                            <h4 className='m-0'>DRAFT</h4>
-                        </div>
-                    }
-                    {
-                        location.isPublished &&
-                        <div className="draftBadge position-absolute badge bg-primary bg-opacity-75">
-                            <h4 className='m-0'>PUBLISHED</h4>
-                        </div>
-                    }
-                    {
-                        !location.isDraft && !location.isPublished &&
-                        <div className="draftBadge position-absolute badge bg-secondary bg-opacity-75">
-                            <h4 className='m-0'>HIDDEN</h4>
-                        </div>
-                    }
+                    <div className={`draftBadge position-absolute badge ${status.className}`}>
+                        <h4 className='m-0'>{status.label}</h4>
+                    </div>
                     <div className="card-header themeBackground">
                         <h3>{location.name}</h3>
                     </div>
@@ -84,9 +73,23 @@ const LocationCard = (props) => {
                                     <i className="fas fa-pencil-alt text-success"></i>&nbsp;
                                     Edit
                                 </DropdownItem>
-                                <DropdownItem onClick={props.onHide} disabled={(!location.isPublished && !location.isDraft) || location.isDraft}>
-                                    <i className="fas fa-eye-slash"></i>&nbsp;
-                                    Hide Location
+                                {
+                                    location.isPublished &&
+                                    <DropdownItem onClick={props.onHide}>
+                                        <i className="fas fa-eye-slash"></i>&nbsp;
+                                        Hide Location
+                                    </DropdownItem>
+                                }
+                                {
+                                    !location.isPublished && !location.isDraft &&
+                                    <DropdownItem onClick={props.onPublish}>
+                                        <i className="fas fa-eye text-success"></i>&nbsp;
+                                        Make Visible
+                                    </DropdownItem>
+                                }
+                                <DropdownItem onClick={props.onComingSoon} disabled={!location.isPublished && !location.comingSoon}>
+                                    <i className="fas fa-clock text-info"></i>&nbsp;
+                                    {location.comingSoon ? 'Remove Coming Soon' : 'Mark as Coming Soon'}
                                 </DropdownItem>
                                 <DropdownItem divider/>
                                 <DropdownItem className='text-danger' onClick={props.onDelete}>

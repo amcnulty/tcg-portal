@@ -22,6 +22,19 @@ export const HELPERS = {
      */
     getTabNameFromTabView: (tabView) => tabViewMap[tabView],
     /**
+     * Derives the single display status for a location from its flags. The four states are
+     * mutually exclusive: comingSoon only applies to a published (live) location and takes
+     * visual precedence over the plain "Published" status.
+     * @param {Object} location Object with isDraft, isPublished and comingSoon flags.
+     * @returns {{label: String, className: String}} The badge label and Bootstrap classes.
+     */
+    getLocationStatus({ isDraft, isPublished, comingSoon } = {}) {
+        if (isDraft) return { label: 'DRAFT', className: 'bg-black bg-opacity-75' };
+        if (isPublished && comingSoon) return { label: 'COMING SOON', className: 'themeBackground text-white' };
+        if (isPublished) return { label: 'PUBLISHED', className: 'bg-primary bg-opacity-75' };
+        return { label: 'HIDDEN', className: 'bg-secondary bg-opacity-75' };
+    },
+    /**
      * Toast Listener
      */
     listenerFunction: [],

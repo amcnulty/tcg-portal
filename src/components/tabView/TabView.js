@@ -42,7 +42,7 @@ const TabView = props => {
     return (
         <div className='TabView'>
             <div className="mb-5 pb-5">
-                <h2 className='my-4'>{props.header}</h2>
+                <h2 className='my-4'>{props.header}{props.statusBadge}</h2>
                 <p>{props.description}</p>
                 {props.children}
                 <div className="card p-4 mt-4">

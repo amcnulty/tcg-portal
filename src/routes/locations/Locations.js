@@ -78,6 +78,30 @@ const Locations = () => {
         });
     }
 
+    const handlePublish = id => {
+        API.publishLocation(id, (res, err) => {
+            if (res && res.status === 200) {
+                console.log('success');
+                loadLocations();
+            }
+            else if (err) {
+                console.log(err);
+            }
+        });
+    }
+
+    const handleComingSoon = (id, comingSoon) => {
+        API.setComingSoon(id, comingSoon, (res, err) => {
+            if (res && res.status === 200) {
+                console.log('success');
+                loadLocations();
+            }
+            else if (err) {
+                console.log(err);
+            }
+        });
+    }
+
     const handleDelete = id => {
         if (window.confirm('Are you sure you want to delete this location? This action cannot be reversed.')) {
             API.deleteLocation(id, (res, err) => {
@@ -149,6 +173,8 @@ const Locations = () => {
                                                     location={location}
                                                     onEdit={() => history.push(`/location/${location._id}`)}
                                                     onHide={() => handleHide(location._id)}
+                                                    onPublish={() => handlePublish(location._id)}
+                                                    onComingSoon={() => handleComingSoon(location._id, !location.comingSoon)}
                                                     onDelete={() => handleDelete(location._id)}
                                                 />
                                             </div>
@@ -166,6 +192,8 @@ const Locations = () => {
                                             location={location}
                                             onEdit={() => history.push(`/location/${location._id}`)}
                                             onHide={() => handleHide(location._id)}
+                                            onPublish={() => handlePublish(location._id)}
+                                            onComingSoon={() => handleComingSoon(location._id, !location.comingSoon)}
                                             onDelete={() => handleDelete(location._id)}
                                         />
                                     </div>

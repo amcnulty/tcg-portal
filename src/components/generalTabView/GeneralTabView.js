@@ -30,6 +30,7 @@ const GeneralTabView = ({location}) => {
     const [contactPhone, setContactPhone] = useState('');
     const [contactEmail, setContactEmail] = useState('');
     const [isPublished, setIsPublished] = useState();
+    const [comingSoon, setComingSoon] = useState(false);
 
     const [wasValidated, setWasValidated] = useState(false);
     const [slugErrorMessage, setSlugErrorMessage] = useState('');
@@ -60,6 +61,7 @@ const GeneralTabView = ({location}) => {
         setContactPhone(locationWithChanges.contactPhone ? locationWithChanges.contactPhone : '');
         setContactEmail(locationWithChanges.contactEmail ? locationWithChanges.contactEmail : '');
         setIsPublished(locationWithChanges.isPublished ? locationWithChanges.isPublished: null);
+        setComingSoon(locationWithChanges.comingSoon ? locationWithChanges.comingSoon : false);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [location]);
 
@@ -71,8 +73,11 @@ const GeneralTabView = ({location}) => {
         }
         else {
             e.preventDefault();
-            if (state.previewLocation._id) {
-                const updateRequest = publish ? { ...state.previewLocation, isPublished: true, isDraft: false } : state.previewLocation;
+            // Resolve the id from the route as a fallback — previewLocation can briefly be
+            // empty on first mount, which would otherwise fall through to a create (duplicate).
+            const id = state.previewLocation?._id || (locationId !== 'new' ? locationId : undefined);
+            if (id) {
+                const updateRequest = publish ? { ...state.previewLocation, _id: id, isPublished: true, isDraft: false } : { ...state.previewLocation, _id: id };
                 API.updateLocation_hideToast(updateRequest, (res, err) => {
                     if (res && res.status === 200) {
                         console.log('success!');
@@ -119,10 +124,25 @@ const GeneralTabView = ({location}) => {
     }
 
     const handleHideLocation = () => {
-        API.hideLocation(state.previewLocation._id, (res, err) => {
+        const id = state.previewLocation?._id || locationId;
+        API.hideLocation(id, (res, err) => {
             if (res && res.status === 200) {
                 console.log('success');
                 setIsPublished(false);
+            }
+            else if (err) {
+                console.log(err);
+            }
+        });
+    }
+
+    const handleComingSoon = () => {
+        const newComingSoon = !comingSoon;
+        const id = state.previewLocation?._id || locationId;
+        API.setComingSoon(id, newComingSoon, (res, err) => {
+            if (res && res.status === 200) {
+                console.log('success');
+                setComingSoon(newComingSoon);
             }
             else if (err) {
                 console.log(err);
@@ -185,10 +205,19 @@ const GeneralTabView = ({location}) => {
 
     const toggle = () => setModal(!modal);
 
+    // Derive the location's display status from the live editing state. A draft that has been
+    // published in this session is no longer a draft, so guard isDraft with the current isPublished.
+    const status = HELPERS.getLocationStatus({
+        isDraft: location.isDraft && !isPublished,
+        isPublished,
+        comingSoon
+    });
+
     return (
         <div className='GeneralTabView'>
             <TabView
                 header={`General ${name ? '- ' + name : ''}`}
+                statusBadge={locationId !== 'new' && <span className={`badge align-middle ms-3 fs-6 ${status.className}`}>{status.label}</span>}
                 description='This section is for editing the general details about the location including the name, description, address, contact and coordinates.'
                 nextView={TAB_THUMBNAIL}
                 formId='generalForm'
@@ -216,6 +245,15 @@ const GeneralTabView = ({location}) => {
                                 <p>Hide this location from view on the live site. This will only temporarily disable the location and will not delete it. You can reverse this action at any time.</p>
                                 <span>
                                     <button className="btn btn-outline-secondary" onClick={handleHideLocation}>Hide Location</button>
+                                </span>
+                            </div>
+                        }
+                        {
+                            (isPublished || comingSoon) &&
+                            <div className="d-flex flex-column my-4">
+                                <p>{comingSoon ? 'This location is currently marked as coming soon on the live site. Remove the coming soon status to show it as open.' : 'Mark this location as coming soon on the live site. This indicates the location is not yet open. You can reverse this action at any time.'}</p>
+                                <span>
+                                    <button className="btn btn-outline-info" onClick={handleComingSoon}>{comingSoon ? 'Remove Coming Soon' : 'Mark as Coming Soon'}</button>
                                 </span>
                             </div>
                         }

@@ -189,6 +189,24 @@ export const API = {
         POST(`/portal/location/hide/${id}`, null, cb, { type: TOAST_TYPES.SUCCESS, message: 'Location has been hidden.'});
     },
     /**
+     * Makes a hidden location visible again by publishing it based on the given id. Reverses hideLocation.
+     * Sends a minimal payload (id + publish flags only) so no other location fields or media are affected.
+     * @param {String} id Id of the location to publish.
+     * @param {Function} cb Callback function that returns response or error of the server request.
+     */
+    publishLocation: (id, cb) => {
+        PUT('/portal/location', { _id: id, isPublished: true, isDraft: false }, cb, { type: TOAST_TYPES.SUCCESS, message: 'Location is now visible on the live site.'});
+    },
+    /**
+     * Marks or unmarks a location as coming soon based on the given id.
+     * @param {String} id Id of the location to update.
+     * @param {Boolean} comingSoon Whether the location should be marked as coming soon.
+     * @param {Function} cb Callback function that returns response or error of the server request.
+     */
+    setComingSoon: (id, comingSoon, cb) => {
+        POST(`/portal/location/coming-soon/${id}`, { comingSoon }, cb, { type: TOAST_TYPES.SUCCESS, message: comingSoon ? 'Location has been marked as coming soon.' : 'Coming soon status has been removed.'});
+    },
+    /**
      * Deletes a location with the given id.
      * @param {String} id Id of the location to delete.
      * @param {Function} cb Callback function that returns response or error of the server request.
