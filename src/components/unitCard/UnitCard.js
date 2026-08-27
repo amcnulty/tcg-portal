@@ -1,8 +1,13 @@
 import React from 'react';
+import { HELPERS } from '../../util/helpers';
 import './UnitCard.sass';
 
 const UnitCard = props => {
     const {unit} = props;
+    // A date that has already passed is not an error — the live site just shows the
+    // unit as available now — but the owner is told so they can tidy it up.
+    const hasFutureDate = HELPERS.isFutureDate(unit.availableDate);
+    const hasPastDate = unit.availableDate && !hasFutureDate;
     return (
         <div className='UnitCard'>
             <div className="card">
@@ -24,6 +29,16 @@ const UnitCard = props => {
                             onClick={props.onAvailableClick}
                         ></button>
                         <span className='fw-bold ms-3'>{unit.available ? 'Available' : 'Unavailable'}</span>
+                        {
+                            unit.available && hasFutureDate &&
+                            <span className='ms-3 badge themeBackground text-white'>Available {HELPERS.formatAvailableDate(unit.availableDate)}</span>
+                        }
+                        {
+                            unit.available && hasPastDate &&
+                            <span className='ms-3 small text-secondary fst-italic'>
+                                {HELPERS.formatAvailableDate(unit.availableDate)} has passed &mdash; showing as available now
+                            </span>
+                        }
                     </div>
                 }
                 <div className="card-body row">

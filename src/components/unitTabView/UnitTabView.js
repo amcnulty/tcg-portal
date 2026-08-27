@@ -35,6 +35,7 @@ const UnitTabView = ({location}) => {
     const [height_available, setHeight_available] = useState('');
     const [depth_available, setDepth_available] = useState('');
     const [sqft_available, setSqft_available] = useState('');
+    const [availableDate_available, setAvailableDate_available] = useState('');
     const [isAvailable_available, setIsAvailable_available] = useState(true);
 
     // Fields for extras modal
@@ -253,6 +254,8 @@ const UnitTabView = ({location}) => {
         setHeight_available('');
         setDepth_available('');
         setSqft_available('');
+        setAvailableDate_available('');
+        setIsAvailable_available(true);
         setIsEditing_available(false);
         setEditingIndex_available(-1);
         setExistingUnit('');
@@ -270,6 +273,7 @@ const UnitTabView = ({location}) => {
         setHeight_available(unit.height ? unit.height : '');
         setDepth_available(unit.depth ? unit.depth : '');
         setSqft_available(unit.squareFeet ? unit.squareFeet : '');
+        setAvailableDate_available('');
     }
     
     const handleAddUnitAvailable = () => {
@@ -280,7 +284,8 @@ const UnitTabView = ({location}) => {
             ...(height_available && {height: height_available}),
             ...(depth_available && {depth: depth_available}),
             ...(sqft_available && {squareFeet: sqft_available}),
-            available: true
+            availableDate: availableDate_available,
+            available: isAvailable_available
         };
         setUnits([...units, newUnit]);
         toggleUnitAvailableModal();
@@ -294,7 +299,8 @@ const UnitTabView = ({location}) => {
         ...(height_available && {height: height_available}),
         ...(depth_available && {depth: depth_available}),
         ...(sqft_available && {squareFeet: sqft_available}),
-        ...(isAvailable_available && {available: isAvailable_available})
+        availableDate: availableDate_available,
+        available: isAvailable_available
         };
         const newUnits = [...units];
         newUnits.splice(editingIndex_available, 1, newUnit);
@@ -318,13 +324,18 @@ const UnitTabView = ({location}) => {
             setHeight_available(units[index].height);
             setDepth_available(units[index].depth);
             setSqft_available(units[index].squareFeet);
-            setIsAvailable_available(units[index].available);
+            setAvailableDate_available(units[index].availableDate ? units[index].availableDate : '');
+            setIsAvailable_available(!!units[index].available);
             setIsEditing_available(true);
             setEditingIndex_available(index);
             setAvailableModalPage(2);
             toggleUnitAvailableModal();
         }
     }
+
+    const minAvailableDate = (availableDate_available && availableDate_available < HELPERS.todayISO())
+        ? availableDate_available
+        : HELPERS.todayISO();
 
     const handleDeleteUnitAvailable = (index) => {
         if (window.confirm('Are you sure you want to delete this unit availability?')) {
@@ -452,7 +463,7 @@ const UnitTabView = ({location}) => {
                                 <p className="text-secondary pt-5">Currently no available units have been added. Create availabilities with the <b>Add Availability</b> button above.</p>
                                 :
                                 <div className="row">
-                                    <p className='p-4 mt-3 bg-warning rounded-3'><b className='fst-italic'>Note:</b> You can quick change the availability of a unit by clicking the <b className='text-danger'>red</b> or <b className='text-success'>green</b> circular indicators. Setting a unit as <i>Unavailable</i> will remove it from the list of availabilities without deleting the record.</p>
+                                    <p className='p-4 mt-3 bg-warning rounded-3'><b className='fst-italic'>Note:</b> You can quick change the availability of a unit by clicking the <b className='text-danger'>red</b> or <b className='text-success'>green</b> circular indicators. Setting a unit as <i>Unavailable</i> will remove it from the list of availabilities without deleting the record. A unit that is not open yet can be given an <b>Available On</b> date when you add or edit it &mdash; the website will show that date until it arrives, then show the unit as available now.</p>
                                     {
                                         units.map((unit, index) => (
                                             <div className='my-2 col-12 col-lg-6 col-xl-4' key={index}>
@@ -777,6 +788,43 @@ const UnitTabView = ({location}) => {
                                         value={sqft_available}
                                         onChange={e => setSqft_available(e.target.value)}
                                     />
+                                </div>
+                            </div>
+                            <div className="row my-3 align-items-end">
+                                <div className="col-12 col-lg-6">
+                                    <label htmlFor="availableDate" className="form-label">Available On</label>
+                                    <small className='text-secondary d-block'>Optional. Leave blank if this unit is available now. Once the date arrives the website shows the unit as available now automatically.</small>
+                                    <div className="input-group">
+                                        <input
+                                            id='availableDate'
+                                            className="form-control"
+                                            type="date"
+                                            min={minAvailableDate}
+                                            value={availableDate_available}
+                                            onChange={e => setAvailableDate_available(e.target.value)}
+                                        />
+                                        {
+                                            availableDate_available &&
+                                            <button
+                                                type='button'
+                                                className="btn btn-outline-secondary"
+                                                onClick={() => setAvailableDate_available('')}
+                                            >Clear</button>
+                                        }
+                                    </div>
+                                </div>
+                                <div className="col-12 col-lg-6">
+                                    <label htmlFor="isAvailable" className="form-label">Availability</label>
+                                    <small className='text-secondary d-block'>Setting this to unavailable hides the unit from the website without deleting it.</small>
+                                    <select
+                                        id='isAvailable'
+                                        className="form-select"
+                                        value={isAvailable_available ? 'available' : 'unavailable'}
+                                        onChange={e => setIsAvailable_available(e.target.value === 'available')}
+                                    >
+                                        <option value='available'>Available</option>
+                                        <option value='unavailable'>Unavailable</option>
+                                    </select>
                                 </div>
                             </div>
                         </>
