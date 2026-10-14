@@ -63,6 +63,13 @@ const UnitCard = props => {
                         <span className="ms-3">{unit.squareFeet ? `${unit.squareFeet}sqft` : '-'}</span>
                     </div>
                     {
+                        props.showAvailable && unit.note &&
+                        <div className="col-12">
+                            <label className='fw-bold text-secondary'>Note:</label>
+                            <span className="ms-3">{unit.note}</span>
+                        </div>
+                    }
+                    {
                         !props.hideTotal &&
                         <div className="col-12 col-sm-6">
                             <label className='fw-bold text-secondary'>Total #:</label>

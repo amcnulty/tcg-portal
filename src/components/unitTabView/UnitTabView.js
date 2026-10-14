@@ -18,6 +18,7 @@ const UnitTabView = ({location}) => {
     const [units, setUnits] = useState();
     const [extras, setExtras] = useState();
     const [isPublished, setIsPublished] = useState();
+    const [availabilityNote, setAvailabilityNote] = useState();
 
     // Fields for unit summary creation modal
     const [unitName_create, setUnitName_create] = useState('');
@@ -36,6 +37,7 @@ const UnitTabView = ({location}) => {
     const [depth_available, setDepth_available] = useState('');
     const [sqft_available, setSqft_available] = useState('');
     const [availableDate_available, setAvailableDate_available] = useState('');
+    const [note_available, setNote_available] = useState('');
     const [isAvailable_available, setIsAvailable_available] = useState(true);
 
     // Fields for extras modal
@@ -70,7 +72,7 @@ const UnitTabView = ({location}) => {
     useEffect(() => {
         updatePreview();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [unitSummary, units, extras, isPublished]);
+    }, [unitSummary, units, extras, isPublished, availabilityNote]);
 
     useEffect(() => {
         const locationWithChanges = {
@@ -81,6 +83,7 @@ const UnitTabView = ({location}) => {
         setUnits(locationWithChanges.units ? locationWithChanges.units : '');
         setExtras(locationWithChanges.extras ? locationWithChanges.extras : '');
         setIsPublished(locationWithChanges.isPublished ? locationWithChanges.isPublished: null);
+        setAvailabilityNote(locationWithChanges.availabilityNote ? locationWithChanges.availabilityNote : '');
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [location]);
 
@@ -138,7 +141,9 @@ const UnitTabView = ({location}) => {
             ...(unitSummary && {unitSummary}),
             ...(units && {units}),
             ...(extras && {extras}),
-            ...((isPublished != null) && {isPublished})
+            ...((isPublished != null) && {isPublished}),
+            // Included even when empty so clearing the note actually clears it.
+            ...((availabilityNote != null) && {availabilityNote})
         };
         const payload = {
             ...location,
@@ -255,6 +260,7 @@ const UnitTabView = ({location}) => {
         setDepth_available('');
         setSqft_available('');
         setAvailableDate_available('');
+        setNote_available('');
         setIsAvailable_available(true);
         setIsEditing_available(false);
         setEditingIndex_available(-1);
@@ -274,6 +280,7 @@ const UnitTabView = ({location}) => {
         setDepth_available(unit.depth ? unit.depth : '');
         setSqft_available(unit.squareFeet ? unit.squareFeet : '');
         setAvailableDate_available('');
+        setNote_available('');
     }
     
     const handleAddUnitAvailable = () => {
@@ -285,6 +292,7 @@ const UnitTabView = ({location}) => {
             ...(depth_available && {depth: depth_available}),
             ...(sqft_available && {squareFeet: sqft_available}),
             availableDate: availableDate_available,
+            note: note_available.trim(),
             available: isAvailable_available
         };
         setUnits([...units, newUnit]);
@@ -300,6 +308,7 @@ const UnitTabView = ({location}) => {
         ...(depth_available && {depth: depth_available}),
         ...(sqft_available && {squareFeet: sqft_available}),
         availableDate: availableDate_available,
+        note: note_available.trim(),
         available: isAvailable_available
         };
         const newUnits = [...units];
@@ -325,6 +334,7 @@ const UnitTabView = ({location}) => {
             setDepth_available(units[index].depth);
             setSqft_available(units[index].squareFeet);
             setAvailableDate_available(units[index].availableDate ? units[index].availableDate : '');
+            setNote_available(units[index].note ? units[index].note : '');
             setIsAvailable_available(!!units[index].available);
             setIsEditing_available(true);
             setEditingIndex_available(index);
@@ -480,6 +490,19 @@ const UnitTabView = ({location}) => {
                                     }
                                 </div>
                             }
+                            <div className="mt-4">
+                                <label htmlFor="availabilityNote" className="form-label">Availability Note</label>
+                                <small className='text-secondary d-block'>Optional. A note for the whole property, shown under the availability table on the website (even when no units are available), e.g. 'Early bird lease-up sale'. Up to 500 characters.</small>
+                                <textarea
+                                    id="availabilityNote"
+                                    className='form-control'
+                                    rows="3"
+                                    maxLength={500}
+                                    placeholder='Enter Availability Note'
+                                    value={availabilityNote || ''}
+                                    onChange={e => setAvailabilityNote(e.target.value)}
+                                />
+                            </div>
                         </div>
                         <h5>Pricing Extras</h5>
                         <p>Use this section to list extra charges, services, features that are available at this location such as additional storage, key replacements, parking etc.</p>
@@ -825,6 +848,21 @@ const UnitTabView = ({location}) => {
                                         <option value='available'>Available</option>
                                         <option value='unavailable'>Unavailable</option>
                                     </select>
+                                </div>
+                            </div>
+                            <div className="row my-3 align-items-end">
+                                <div className="col-12">
+                                    <label htmlFor="unitNote" className="form-label">Note</label>
+                                    <small className='text-secondary d-block'>Optional. Shown on a line under this unit on the website, e.g. 'Mini split included' or 'Additional parking space included'. Up to 150 characters.</small>
+                                    <input
+                                        id='unitNote'
+                                        className="form-control"
+                                        type="text"
+                                        maxLength={150}
+                                        placeholder='Enter Note'
+                                        value={note_available}
+                                        onChange={e => setNote_available(e.target.value)}
+                                    />
                                 </div>
                             </div>
                         </>
